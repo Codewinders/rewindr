@@ -60,6 +60,10 @@ export const api = {
   createRental: (itemId, days, delivery) => request("POST", "/api/rentals", { itemId, days, delivery }),
   returnRental: (id) => request("POST", `/api/rentals/${id}/return`),
 
+  // stripe
+  stripeConnect: () => request("POST", "/api/stripe/connect"),
+  stripeStatus: () => request("GET", "/api/stripe/status"),
+
   // threads
   threads: () => request("GET", "/api/threads"),
   createThread: (payload) => request("POST", "/api/threads", payload),

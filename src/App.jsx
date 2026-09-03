@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "./api.js";
-import { Film, BookOpen, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Camera, Loader2, Crown, Ban } from "lucide-react";
+import { Film, BookOpen, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Camera, Loader2, Crown, Ban, CreditCard } from "lucide-react";
 
 const DEMO_VERIFY_CODE = "123456"; // visas i UI i väntan på riktig e-postutskick från backend
 
@@ -182,14 +182,31 @@ function AuthPanel({ name, accounts, onAuthChange }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [stripeStatus, setStripeStatus] = useState(null);
+  const [stripeBusy, setStripeBusy] = useState(false);
 
   const inputStyle = { background: "#0a0612", border: "1px solid #3a2a55", color: "#f3eefc", ...fontBody };
+
+  useEffect(() => {
+    if (!name) return;
+    api.stripeStatus().then(setStripeStatus).catch(() => {});
+  }, [name]);
+
+  const connectStripe = async () => {
+    setStripeBusy(true);
+    try {
+      const data = await api.stripeConnect();
+      if (data.url) window.location.href = data.url;
+    } catch (err) {
+      setStripeBusy(false);
+    }
+  };
 
   if (name) {
     const acc = accounts[name];
     return (
       <div className="mb-4">
-        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border" style={{ borderColor: "#3a2a55", background: "#140b22", ...fontBody }}>
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border flex-wrap" style={{ borderColor: "#3a2a55", background: "#140b22", ...fontBody }}>
           <div className="flex items-center gap-2 text-sm flex-wrap" style={{ color: "#f3eefc" }}>
             <User size={15} style={{ color: "#21e6ec" }} />
             Inloggad som <strong>{name}</strong>
@@ -200,11 +217,25 @@ function AuthPanel({ name, accounts, onAuthChange }) {
               <span className="flex items-center gap-1 text-[11px]" style={{ color: "#ffe94a" }}><Crown size={13} /> admin</span>
             )}
           </div>
-          <button
-            onClick={async () => { await api.logout(); onAuthChange(null); }}
-            className="flex items-center gap-1 text-xs" style={{ color: "#8a7aa8" }}>
-            <LogOut size={13} /> Logga ut
-          </button>
+          <div className="flex items-center gap-3">
+            {stripeStatus && (
+              stripeStatus.chargesEnabled ? (
+                <span className="flex items-center gap-1 text-[11px]" style={{ color: "#4ade80" }}>
+                  <CreditCard size={13} /> kan ta emot betalningar
+                </span>
+              ) : (
+                <button onClick={connectStripe} disabled={stripeBusy}
+                  className="flex items-center gap-1 text-[11px] disabled:opacity-50" style={{ color: "#21e6ec" }}>
+                  <CreditCard size={13} /> {stripeBusy ? "..." : "Anslut betalningar"}
+                </button>
+              )
+            )}
+            <button
+              onClick={async () => { await api.logout(); onAuthChange(null); }}
+              className="flex items-center gap-1 text-xs" style={{ color: "#8a7aa8" }}>
+              <LogOut size={13} /> Logga ut
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -1208,8 +1239,8 @@ function RewindrAppInner() {
   });
 
   const handleRent = withErrorHandling(async (item, delivery, shipCost, days) => {
-    await api.createRental(item.id, days, delivery);
-    setOpenItem(null);
+    const data = await api.createRental(item.id, days, delivery);
+    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
   });
 
   const handleReturnRental = withErrorHandling(async (rentalId) => {

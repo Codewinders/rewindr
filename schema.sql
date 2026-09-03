@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
   verified INTEGER NOT NULL DEFAULT 0,
   is_admin INTEGER NOT NULL DEFAULT 0,
   banned INTEGER NOT NULL DEFAULT 0,
+  stripe_account_id TEXT,
+  stripe_charges_enabled INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL
 );
 
@@ -47,6 +49,9 @@ CREATE TABLE IF NOT EXISTS rentals (
   rent_cost INTEGER NOT NULL DEFAULT 0,
   returned INTEGER NOT NULL DEFAULT 0,
   returned_at INTEGER,
+  stripe_checkout_session_id TEXT,
+  stripe_payment_intent_id TEXT,
+  application_fee_amount INTEGER NOT NULL DEFAULT 0,
   -- "active_key" är NULL för återlämnade lån, men item_id för aktiva.
   -- Det unika indexet nedan gör det FYSISKT OMÖJLIGT att ha två aktiva
   -- uthyrningar av samma titel samtidigt, även vid samtidiga klick —

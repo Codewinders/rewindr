@@ -1,5 +1,7 @@
-import { json, readJson, makeId, getSessionUser, publicRental } from "../../../lib/db.js";
-import { sendEmail, rentalEmail } from "../../../lib/email.js";
+import { json, readJson, getSessionUser, publicRental } from "../../../lib/db.js";
+import { stripe } from "../../../lib/stripe.js";
+
+const PLATFORM_FEE_PCT = 15; // % provision på hyresdelen (inte på frakt)
 
 export async function onRequestGet({ env }) {
   const { results } = await env.DB.prepare("SELECT * FROM rentals ORDER BY rented_at DESC").all();
@@ -16,37 +18,59 @@ export async function onRequestPost({ request, env }) {
   if (!listing) return json({ error: "Titeln finns inte." }, 404);
   if (listing.owner === user.username) return json({ error: "Du kan inte hyra din egen titel." }, 400);
 
+  const owner = await env.DB.prepare("SELECT * FROM users WHERE username = ?").bind(listing.owner).first();
+  if (!owner?.stripe_account_id || !owner.stripe_charges_enabled) {
+    return json({ error: "Ägaren har inte kopplat sitt betalningskonto än, så titeln kan inte hyras just nu." }, 400);
+  }
+
+  // Snabb koll innan vi skickar iväg till Stripe (själva skyddet mot
+  // dubbelbokning sker ändå garanterat i webhooken, via det unika
+  // databasindexet — det här är bara för att slippa onödiga Stripe-sessioner).
+  const active = await env.DB.prepare("SELECT id FROM rentals WHERE item_id = ? AND returned = 0").bind(b.itemId).first();
+  if (active) return json({ error: "Titeln är redan uthyrd." }, 409);
+
   const days = Math.max(1, Number(b.days) || 1);
   const delivery = b.delivery === "ship" ? "ship" : "pickup";
   const shipCost = delivery === "ship" ? listing.shipping_price : 0;
   const rentCost = listing.price * days;
-  const id = makeId("rental");
+  const totalKr = rentCost + shipCost;
+  const applicationFeeOre = Math.round(rentCost * (PLATFORM_FEE_PCT / 100)) * 100;
 
-  // Det unika indexet på active_key (satt till item_id här, NULL vid
-  // återlämning) gör att databasen SJÄLV avvisar ett andra samtidigt
-  // försök att hyra samma titel — ingen tidslucka att missa, oavsett
-  // hur nära i tid två personer klickar "Hyr nu".
+  const url = new URL(request.url);
+  const origin = `${url.protocol}//${url.host}`;
+
   try {
-    await env.DB.prepare(
-      `INSERT INTO rentals
-       (id, item_id, renter_name, owner_name, rented_at, days, delivery, ship_cost, rent_cost, returned, active_key)
-       VALUES (?,?,?,?,?,?,?,?,?,0,?)`
-    ).bind(id, b.itemId, user.username, listing.owner, Date.now(), days, delivery, shipCost, rentCost, b.itemId).run();
+    const session = await stripe.createCheckoutSession(env, {
+      mode: "payment",
+      customer_email: user.email,
+      payment_method_types: ["card", "klarna"],
+      line_items: [{
+        price_data: {
+          currency: "sek",
+          product_data: { name: `${listing.title} — hyra (${days} ${days === 1 ? "dag" : "dagar"})` },
+          unit_amount: totalKr * 100,
+        },
+        quantity: 1,
+      }],
+      payment_intent_data: {
+        application_fee_amount: applicationFeeOre,
+        transfer_data: { destination: owner.stripe_account_id },
+      },
+      metadata: {
+        itemId: listing.id,
+        renterUsername: user.username,
+        ownerUsername: listing.owner,
+        days: String(days),
+        delivery,
+        shipCost: String(shipCost),
+        rentCost: String(rentCost),
+      },
+      success_url: `${origin}/?rented=success`,
+      cancel_url: `${origin}/?rented=cancel`,
+    });
+
+    return json({ checkoutUrl: session.url });
   } catch (err) {
-    if (String(err.message || err).toLowerCase().includes("unique")) {
-      return json({ error: "Någon annan hyrde precis den här titeln. Testa en annan." }, 409);
-    }
-    throw err;
+    return json({ error: "Kunde inte starta betalningen: " + err.message }, 500);
   }
-
-  // Mejla ägaren — misslyckas det, stoppar det INTE själva bokningen.
-  const owner = await env.DB.prepare("SELECT email FROM users WHERE username = ?").bind(listing.owner).first();
-  if (owner?.email) {
-    const rental = { renterName: user.username, days, delivery };
-    const { subject, html } = rentalEmail(rental, listing.title);
-    await sendEmail(env, owner.email, subject, html);
-  }
-
-  const row = await env.DB.prepare("SELECT * FROM rentals WHERE id = ?").bind(id).first();
-  return json(publicRental(row));
 }
