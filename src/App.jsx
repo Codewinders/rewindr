@@ -192,12 +192,21 @@ function AuthPanel({ name, accounts, onAuthChange }) {
     api.stripeStatus().then(setStripeStatus).catch(() => {});
   }, [name]);
 
+  const [stripeError, setStripeError] = useState("");
+
   const connectStripe = async () => {
     setStripeBusy(true);
+    setStripeError("");
     try {
       const data = await api.stripeConnect();
-      if (data.url) window.location.href = data.url;
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setStripeError("Fick inget svar från servern (ingen url).");
+        setStripeBusy(false);
+      }
     } catch (err) {
+      setStripeError(err.message || "Okänt fel.");
       setStripeBusy(false);
     }
   };
@@ -237,6 +246,11 @@ function AuthPanel({ name, accounts, onAuthChange }) {
             </button>
           </div>
         </div>
+        {stripeError && (
+          <div className="mt-2 text-[11px] rounded-lg p-2" style={{ background: "#ff8a8a15", color: "#ff8a8a", ...fontBody }}>
+            Stripe-fel: {stripeError}
+          </div>
+        )}
       </div>
     );
   }
