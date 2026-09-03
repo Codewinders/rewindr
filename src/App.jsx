@@ -259,7 +259,7 @@ function AuthPanel({ name, accounts, onAuthChange }) {
 
   if (pendingVerify) {
     return (
-      <div className="mb-4 rounded-xl border p-4 max-w-sm" style={{ borderColor: "#3a2a55", background: "#140b22", ...fontBody }}>
+      <div className="mb-4 rounded-xl border p-4 max-w-sm mx-auto" style={{ borderColor: "#3a2a55", background: "#140b22", ...fontBody }}>
         <div className="text-sm mb-2" style={{ color: "#f3eefc" }}>Verifiera kontot "{pendingVerify}"</div>
         <p className="text-[11px] mb-2" style={{ color: "#6d5d8a" }}>
           Demo-läge: ingen riktig e-post skickas än. Ange koden <strong>{DEMO_VERIFY_CODE}</strong> för att simulera verifiering.
@@ -276,7 +276,7 @@ function AuthPanel({ name, accounts, onAuthChange }) {
   }
 
   return (
-    <div className="mb-4 rounded-xl border p-4 max-w-sm" style={{ borderColor: "#3a2a55", background: "#140b22" }}>
+    <div className="mb-4 rounded-xl border p-4 max-w-sm mx-auto" style={{ borderColor: "#3a2a55", background: "#140b22" }}>
       <div className="flex gap-2 mb-3 text-xs" style={fontDisplay}>
         <button onClick={() => { setMode("login"); setError(""); }} style={{ color: mode === "login" ? "#ffe94a" : "#8a7aa8" }}>LOGGA IN</button>
         <span style={{ color: "#3a2a55" }}>/</span>
