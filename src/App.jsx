@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { api } from "./api.js";
 import { Film, BookOpen, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Camera, Loader2, Crown, Ban, CreditCard } from "lucide-react";
 
@@ -549,9 +549,13 @@ function Cassette({ item, onOpen }) {
     <button onClick={() => onOpen(item)}
       className="rw-card text-left rounded-xl overflow-hidden border transition-transform duration-200 group"
       style={{ borderColor: color + "55", background: "#140b22" }}>
-      <div className="h-28 flex items-center justify-center relative" style={{ background: `linear-gradient(135deg, ${color}22, #0a0612 80%)` }}>
-        <div className="absolute left-0 top-0 bottom-0 w-2" style={{ background: color, boxShadow: `0 0 12px ${color}` }} />
-        <Icon size={34} style={{ color }} className="group-hover:scale-110 transition-transform" />
+      <div className="h-28 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}22, #0a0612 80%)` }}>
+        <div className="absolute left-0 top-0 bottom-0 w-2 z-10" style={{ background: color, boxShadow: `0 0 12px ${color}` }} />
+        {item.imageUrl ? (
+          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+        ) : (
+          <Icon size={34} style={{ color }} className="group-hover:scale-110 transition-transform" />
+        )}
       </div>
       <div className="p-3">
         <h3 className="text-base leading-tight" style={{ ...fontDisplay, color: "#f3eefc" }}>{item.title}</h3>
@@ -803,9 +807,13 @@ function ItemModal({ item, onClose, onRent, onRemove, alreadyRented, activeRenta
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(5,2,12,0.8)" }} onClick={onClose}>
       <div className="w-full max-w-sm rounded-2xl border overflow-hidden max-h-[90vh] overflow-y-auto" style={{ borderColor: color + "66", background: "#140b22" }} onClick={(e) => e.stopPropagation()}>
-        <div className="h-32 flex items-center justify-center relative" style={{ background: `linear-gradient(135deg, ${color}33, #0a0612 85%)` }}>
-          <Icon size={44} style={{ color }} />
-          <button onClick={onClose} className="absolute top-3 right-3 text-white/60 hover:text-white"><X size={20} /></button>
+        <div className="h-32 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}33, #0a0612 85%)` }}>
+          {item.imageUrl ? (
+            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+          ) : (
+            <Icon size={44} style={{ color }} />
+          )}
+          <button onClick={onClose} className="absolute top-3 right-3 text-white/60 hover:text-white z-10" style={{ background: item.imageUrl ? "rgba(0,0,0,0.4)" : "transparent", borderRadius: "9999px", padding: 4 }}><X size={20} /></button>
         </div>
         <div className="p-5" style={fontBody}>
           <h2 className="text-2xl mb-1" style={{ ...fontDisplay, color: "#f3eefc" }}>{item.title}</h2>
@@ -942,65 +950,51 @@ function ListForm({ name, onAdd }) {
   const [shippingPrice, setShippingPrice] = useState(35);
   const [replacementValue, setReplacementValue] = useState(100);
   const [tradeable, setTradeable] = useState(false);
-  const [scanning, setScanning] = useState(false);
-  const [scanError, setScanError] = useState("");
-  const [scanResult, setScanResult] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(null);
-  const fileInputRef = useRef(null);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   useEffect(() => { if (type === "game" && !PLATFORMS.includes(format)) setFormat(PLATFORMS[0]); if (type === "movie" && !FORMATS.includes(format)) setFormat(FORMATS[1]); }, [type]);
 
   const inputStyle = { background: "#0a0612", border: "1px solid #3a2a55", color: "#f3eefc", ...fontBody };
 
-  const fileToBase64 = (file) => new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result.split(",")[1]);
-    r.onerror = () => reject(new Error("Kunde inte läsa bilden"));
-    r.readAsDataURL(file);
+  // Krymper bilden till max 800px bredd/höjd och komprimerar som JPEG
+  // innan uppladdning — håller lagringen liten och sidan snabb.
+  const compressImage = (file) => new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => { img.src = reader.result; };
+    reader.onerror = () => reject(new Error("Kunde inte läsa bilden"));
+    img.onload = () => {
+      const maxSize = 800;
+      let { width, height } = img;
+      if (width > height && width > maxSize) { height = Math.round(height * (maxSize / width)); width = maxSize; }
+      else if (height > maxSize) { width = Math.round(width * (maxSize / height)); height = maxSize; }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.8);
+    };
+    img.onerror = () => reject(new Error("Filen är ingen giltig bild"));
+    reader.readAsDataURL(file);
   });
 
-  const handlePhoto = async (e) => {
+  const handleImageSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setScanError("");
-    setScanResult(null);
-    setScanning(true);
+    setUploadError("");
+    setUploading(true);
     try {
-      const base64 = await fileToBase64(file);
-      setPhotoPreview("data:" + file.type + ";base64," + base64);
-
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 300,
-          messages: [{
-            role: "user",
-            content: [
-              { type: "image", source: { type: "base64", media_type: file.type, data: base64 } },
-              {
-                type: "text",
-                text: "Titta på omslaget på den här filmen, TV-spelet eller boken. Svara ENDAST med kompakt JSON, ingen markdown, inga extra kommentarer, i exakt detta format: " +
-                  '{"title": "<titel eller null om oläsbart>", "type": "<movie|game|book>", "genre": "<en av: Skräck, Sci-fi, Drama, Komedi, Action, Romantik, Fantasy, Deckare, eller null>"}',
-              },
-            ],
-          }],
-        }),
-      });
-      const data = await response.json();
-      const textBlock = (data.content || []).find((b) => b.type === "text");
-      if (!textBlock) throw new Error("Fick inget svar");
-      const cleaned = textBlock.text.replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(cleaned);
-      setScanResult(parsed);
-      if (parsed.title) setTitle(parsed.title);
-      if (parsed.type && ["movie", "game", "book"].includes(parsed.type)) setType(parsed.type);
-      if (parsed.genre && GENRES.includes(parsed.genre)) setGenre(parsed.genre);
+      const compressed = await compressImage(file);
+      setImagePreview(URL.createObjectURL(compressed));
+      const data = await api.uploadImage(compressed);
+      setImageUrl(data.url);
     } catch (err) {
-      setScanError("Kunde inte känna igen titeln automatiskt — fyll i manuellt.");
+      setUploadError(err.message || "Kunde inte ladda upp bilden.");
+      setImagePreview(null);
     } finally {
-      setScanning(false);
+      setUploading(false);
     }
   };
 
@@ -1024,6 +1018,7 @@ function ListForm({ name, onAdd }) {
       price: cleanPrice,
       owner: name,
       note: note.trim() || "Ingen extra info.",
+      imageUrl,
       forSale,
       delivery,
       shippingPrice: delivery === "pickup" ? 0 : cleanShipping,
@@ -1031,28 +1026,26 @@ function ListForm({ name, onAdd }) {
       tradeable,
     });
     setTitle(""); setNote(""); setForSale(false); setTradeable(false);
-    setPhotoPreview(null); setScanResult(null);
+    setImageUrl(null); setImagePreview(null);
   };
 
   return (
     <div className="max-w-md space-y-4 rounded-2xl border p-5" style={{ borderColor: "#3a2a55", background: "#140b22", ...fontBody }}>
       <h2 className="text-2xl mb-1" style={{ ...fontDisplay, color: "#ffe94a" }}>Lägg upp en titel</h2>
 
-      <div className="rounded-lg p-3" style={{ background: "#0a0612", border: "1px dashed #3a2a55" }}>
-        <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} className="hidden" />
-        <button type="button" onClick={() => fileInputRef.current?.click()}
-          className="w-full py-2 rounded-md text-xs flex items-center justify-center gap-2"
-          style={{ background: "transparent", border: "1px solid #21e6ec66", color: "#21e6ec" }}>
-          {scanning ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
-          {scanning ? "Identifierar omslaget…" : "Ta / ladda upp bild för att fylla i automatiskt"}
-        </button>
-        {photoPreview && (
-          <img src={photoPreview} alt="Omslag" className="w-16 h-16 object-cover rounded-md mt-2" />
+      <div>
+        <label className="text-xs" style={{ color: "#8a7aa8" }}>Omslagsbild (valfritt)</label>
+        <label className="mt-1 flex items-center justify-center gap-2 rounded-md border border-dashed cursor-pointer py-3 text-xs"
+          style={{ borderColor: "#3a2a55", color: uploading ? "#8a7aa8" : "#21e6ec" }}>
+          <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} disabled={uploading} />
+          {uploading ? "Laddar upp…" : imagePreview ? "Byt bild" : "Välj eller ta en bild"}
+        </label>
+        {imagePreview && (
+          <img src={imagePreview} alt="Förhandsvisning" className="mt-2 w-full h-32 object-cover rounded-md" />
         )}
-        {scanResult?.title && <p className="text-[11px] mt-2" style={{ color: "#4ade80" }}>Kände igen: {scanResult.title}</p>}
-        {scanResult && !scanResult.title && <p className="text-[11px] mt-2" style={{ color: "#8a7aa8" }}>Kunde inte läsa av titeln, fyll i manuellt.</p>}
-        {scanError && <p className="text-[11px] mt-2" style={{ color: "#ff8a8a" }}>{scanError}</p>}
+        {uploadError && <p className="text-[11px] mt-1" style={{ color: "#ff8a8a" }}>{uploadError}</p>}
       </div>
+
       <div>
         <label className="text-xs" style={{ color: "#8a7aa8" }}>Titel</label>
         <input value={title} onChange={(e) => setTitle(e.target.value)}

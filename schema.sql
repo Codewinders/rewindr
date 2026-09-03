@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS listings (
   price INTEGER NOT NULL,
   owner TEXT NOT NULL,
   note TEXT,
+  image_url TEXT,
   for_sale INTEGER NOT NULL DEFAULT 0,
   delivery TEXT NOT NULL DEFAULT 'pickup',
   shipping_price INTEGER NOT NULL DEFAULT 0,

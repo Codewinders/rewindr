@@ -8,5 +8,11 @@
       "database_name": "rewindr-db",
       "database_id": "fa63decf-f41f-44b3-9680-b8d5fdfd44bd"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "rewindr-images"
+    }
   ]
 }

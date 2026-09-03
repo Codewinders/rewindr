@@ -19,11 +19,11 @@ export async function onRequestPost({ request, env }) {
   const id = makeId("item");
   await env.DB.prepare(
     `INSERT INTO listings
-     (id, title, type, format, genre, price, owner, note, for_sale, delivery, shipping_price, replacement_value, tradeable, created_at)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+     (id, title, type, format, genre, price, owner, note, image_url, for_sale, delivery, shipping_price, replacement_value, tradeable, created_at)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
   ).bind(
     id, b.title.trim(), b.type || "movie", b.format || null, b.genre || null, price,
-    user.username, b.note || "", b.forSale ? 1 : 0, b.delivery || "pickup",
+    user.username, b.note || "", b.imageUrl || null, b.forSale ? 1 : 0, b.delivery || "pickup",
     Math.max(0, Number(b.shippingPrice) || 0), Math.max(0, Number(b.replacementValue) || 0),
     b.tradeable ? 1 : 0, Date.now()
   ).run();

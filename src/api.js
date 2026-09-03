@@ -27,6 +27,18 @@ async function request(method, path, body) {
   return data;
 }
 
+async function uploadFile(path, file) {
+  const headers = {};
+  const token = getToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(path, { method: "POST", headers, body: formData });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Serverfel (${res.status})`);
+  return data;
+}
+
 export const api = {
   // auth
   register: (username, email, password) => request("POST", "/api/register", { username, email, password }),
@@ -54,6 +66,7 @@ export const api = {
   listings: () => request("GET", "/api/listings"),
   createListing: (listing) => request("POST", "/api/listings", listing),
   deleteListing: (id) => request("DELETE", `/api/listings/${id}`),
+  uploadImage: (file) => uploadFile("/api/upload", file),
 
   // rentals
   rentals: () => request("GET", "/api/rentals"),
