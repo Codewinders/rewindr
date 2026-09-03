@@ -118,7 +118,7 @@ function Marquee({ query, setQuery }) {
           REWINDR
         </h1>
         <p className="mt-4 text-sm sm:text-base max-w-md mx-auto" style={{ ...fontBody, color: "#c9b8e0" }}>
-          Hyr filmer och böcker av folk i din närhet. Ingen strömning — riktiga kopior, riktiga hyllor.
+          Hyr filmer och TV-spel av folk i din närhet. Ingen strömning — riktiga kopior, riktiga hyllor.
         </p>
         <div className="mt-5 max-w-sm mx-auto relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#6d5d8a" }} />
