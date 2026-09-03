@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { api } from "./api.js";
-import { Film, BookOpen, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Camera, Loader2, Crown, Ban, CreditCard } from "lucide-react";
+import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard } from "lucide-react";
 
 const DEMO_VERIFY_CODE = "123456"; // visas i UI i väntan på riktig e-postutskick från backend
 
@@ -28,18 +28,6 @@ const GENRE_COLORS = {
 };
 const GENRES = Object.keys(GENRE_COLORS);
 
-const SEED_ITEMS = [
-  { id: "seed1", title: "Midnattsspöket", type: "movie", format: "VHS", genre: "Skräck", price: 12, owner: "Elin", note: "VHS, lite krispig bild men fungerar fint.", forSale: true, delivery: "both", shippingPrice: 39, replacementValue: 120, tradeable: true },
-  { id: "seed2", title: "Stjärnvind 7", type: "movie", format: "4K Blu-ray", genre: "Sci-fi", price: 35, owner: "Robban", note: "Director's cut, extended scenes.", forSale: false, delivery: "pickup", shippingPrice: 0, replacementValue: 280, tradeable: false },
-  { id: "seed3", title: "Sista Sommaren", type: "book", format: null, genre: "Drama", price: 10, owner: "Nadia", note: "Pocket, lite kaffefläck på sid 40.", forSale: true, delivery: "ship", shippingPrice: 29, replacementValue: 60, tradeable: true },
-  { id: "seed4", title: "Skrattgas", type: "movie", format: "DVD", genre: "Komedi", price: 12, owner: "Jonte", note: "Familjefavorit sedan 90-talet.", forSale: false, delivery: "both", shippingPrice: 35, replacementValue: 90, tradeable: false },
-  { id: "seed5", title: "Vindens Rike", type: "book", format: null, genre: "Fantasy", price: 14, owner: "Elin", note: "Första i trilogin, inbunden.", forSale: false, delivery: "both", shippingPrice: 29, replacementValue: 140, tradeable: true },
-  { id: "seed6", title: "Betong & Rök", type: "movie", format: "Blu-ray", genre: "Action", price: 25, owner: "Sam", note: "Special edition med bonusmaterial.", forSale: true, delivery: "pickup", shippingPrice: 0, replacementValue: 180, tradeable: false },
-  { id: "seed7", title: "Rosornas Krig", type: "book", format: null, genre: "Romantik", price: 9, owner: "Ines", note: "Andrahands, mjuk rygg.", forSale: false, delivery: "ship", shippingPrice: 25, replacementValue: 50, tradeable: false },
-  { id: "seed8", title: "Tystnadens Spår", type: "movie", format: "DVD", genre: "Deckare", price: 15, owner: "Robban", note: "Svensk noir-klassiker.", forSale: false, delivery: "both", shippingPrice: 35, replacementValue: 100, tradeable: true },
-  { id: "seed9", title: "Skymningsriket", type: "game", format: "Nintendo Switch", genre: "Fantasy", price: 20, owner: "Sam", note: "Fint skick, allt tillbehör med.", forSale: false, delivery: "both", shippingPrice: 45, replacementValue: 350, tradeable: true },
-  { id: "seed10", title: "Neonjakten", type: "game", format: "Xbox Series X", genre: "Action", price: 25, owner: "Jonte", note: "Digital kod ej inkluderad, endast skiva.", forSale: true, delivery: "pickup", shippingPrice: 0, replacementValue: 400, tradeable: false },
-];
 
 // ---------- storage ----------
 function useRewindrData() {
@@ -147,10 +135,11 @@ function Marquee({ query, setQuery }) {
   );
 }
 
-function Tabs({ active, setActive, showAdmin }) {
+function Tabs({ active, setActive, showAdmin, showMyListings }) {
   const tabs = [
     { id: "browse", label: "Bläddra" },
     { id: "list", label: "Lägg upp" },
+    ...(showMyListings ? [{ id: "myListings", label: "Mina annonser" }] : []),
     { id: "mine", label: "Mina lån" },
     ...(showAdmin ? [{ id: "admin", label: "Admin" }] : []),
   ];
@@ -539,7 +528,7 @@ function AdminPanel({ listings, accounts, reviews, rentals, threads, onDeleteLis
 
 // ---------- browse ----------
 function iconFor(type) {
-  return type === "book" ? BookOpen : type === "game" ? Gamepad2 : Film;
+  return type === "game" ? Gamepad2 : Film;
 }
 
 function Cassette({ item, onOpen }) {
@@ -821,7 +810,7 @@ function ItemModal({ item, onClose, onRent, onRemove, alreadyRented, activeRenta
             <span>{item.genre}</span>
             {item.format && <><span style={{ color: "#8a7aa8" }}>·</span><span>{item.format}</span></>}
             <span style={{ color: "#8a7aa8" }}>·</span>
-            <span style={{ color: "#8a7aa8" }}>{item.type === "book" ? "Bok" : item.type === "game" ? "TV-spel" : "Film"}</span>
+            <span style={{ color: "#8a7aa8" }}>{item.type === "game" ? "TV-spel" : "Film"}</span>
             {item.forSale && <span className="flex items-center gap-1" style={{ color: "#4ade80" }}><Tag size={11} /> märkt säljbar av ägaren</span>}
           </div>
           <p className="text-sm mb-4" style={{ color: "#c9b8e0" }}>{item.note}</p>
@@ -1013,7 +1002,7 @@ function ListForm({ name, onAdd }) {
       id: "item-" + Date.now(),
       title: title.trim(),
       type,
-      format: type !== "book" ? format : null,
+      format: format,
       genre,
       price: cleanPrice,
       owner: name,
@@ -1049,14 +1038,13 @@ function ListForm({ name, onAdd }) {
       <div>
         <label className="text-xs" style={{ color: "#8a7aa8" }}>Titel</label>
         <input value={title} onChange={(e) => setTitle(e.target.value)}
-          className="w-full mt-1 px-3 py-2 rounded-md outline-none" style={inputStyle} placeholder="Filmens eller bokens namn" />
+          className="w-full mt-1 px-3 py-2 rounded-md outline-none" style={inputStyle} placeholder="Filmens eller spelets namn" />
       </div>
       <div className="flex gap-3">
         <div className="flex-1">
           <label className="text-xs" style={{ color: "#8a7aa8" }}>Typ</label>
           <select value={type} onChange={(e) => setType(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md outline-none" style={inputStyle}>
             <option value="movie">Film</option>
-            <option value="book">Bok</option>
             <option value="game">TV-spel</option>
           </select>
         </div>
@@ -1312,7 +1300,7 @@ function RewindrAppInner() {
         )}
         <AuthPanel name={name} accounts={accounts} onAuthChange={handleAuthChange} />
         <Marquee query={query} setQuery={setQuery} />
-        <Tabs active={tab} setActive={setTab} showAdmin={isAdmin} />
+        <Tabs active={tab} setActive={setTab} showAdmin={isAdmin} showMyListings={!!name} />
 
         {!ready ? (
           <div className="text-center py-16" style={{ color: "#6d5d8a", ...fontBody }}>Spolar upp hyllan…</div>
@@ -1321,7 +1309,7 @@ function RewindrAppInner() {
             {tab === "browse" && (
               <div>
                 <div className="flex gap-2 mb-5" style={fontBody}>
-                  {[["all", "Allt"], ["movie", "Filmer"], ["book", "Böcker"], ["game", "TV-spel"]].map(([id, label]) => (
+                  {[["all", "Allt"], ["movie", "Filmer"], ["game", "TV-spel"]].map(([id, label]) => (
                     <button key={id} onClick={() => setFilter(id)}
                       className="px-3 py-1.5 rounded-full text-xs border"
                       style={{
@@ -1346,6 +1334,22 @@ function RewindrAppInner() {
               name
                 ? <ListForm name={name} onAdd={handleAdd} />
                 : <div className="text-xs rounded-lg p-4 max-w-sm" style={{ background: "#21e6ec15", color: "#c9b8e0", ...fontBody }}>Logga in högst upp för att lägga upp en titel.</div>
+            )}
+            {tab === "myListings" && (
+              name ? (
+                myItems.length === 0 ? (
+                  <div className="text-center py-16" style={{ ...fontBody, color: "#6d5d8a" }}>
+                    <Sparkles className="mx-auto mb-3" size={28} />
+                    Du har inte lagt upp något än — gå till "Lägg upp" för att komma igång.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {myItems.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} />)}
+                  </div>
+                )
+              ) : (
+                <div className="text-xs rounded-lg p-4 max-w-sm" style={{ background: "#21e6ec15", color: "#c9b8e0", ...fontBody }}>Logga in högst upp för att se dina annonser.</div>
+              )
             )}
             {tab === "mine" && <MyRentals rentals={rentals} listings={listings} name={name} onReturn={handleReturnRental} />}
             {tab === "admin" && isAdmin && (
