@@ -1,0 +1,52 @@
+import { json, readJson, makeId, getSessionUser } from "../../../lib/db.js";
+import { sendEmail, messageEmail } from "../../../lib/email.js";
+
+async function fullThread(env, id) {
+  const t = await env.DB.prepare("SELECT * FROM threads WHERE id = ?").bind(id).first();
+  const { results } = await env.DB.prepare("SELECT * FROM messages WHERE thread_id = ? ORDER BY at ASC").bind(id).all();
+  return {
+    id: t.id, kind: t.kind, itemId: t.item_id, itemTitle: t.item_title, owner: t.owner,
+    buyerName: t.buyer_name, offeredItemId: t.offered_item_id, offeredItemTitle: t.offered_item_title,
+    tradeType: t.trade_type, tradeDays: t.trade_days,
+    messages: results.map((m) => ({ from: m.from_name, text: m.text, at: m.at })),
+  };
+}
+
+export async function onRequestGet({ env }) {
+  const { results } = await env.DB.prepare("SELECT id FROM threads ORDER BY created_at DESC").all();
+  const threads = await Promise.all(results.map((r) => fullThread(env, r.id)));
+  return json(threads);
+}
+
+export async function onRequestPost({ request, env }) {
+  const user = await getSessionUser(env, request);
+  if (!user) return json({ error: "Inloggning krävs." }, 401);
+  if (user.banned) return json({ error: "Ditt konto är spärrat." }, 403);
+
+  const b = await readJson(request);
+  const listing = await env.DB.prepare("SELECT * FROM listings WHERE id = ?").bind(b.itemId).first();
+  if (!listing) return json({ error: "Titeln finns inte." }, 404);
+
+  const id = makeId("thread");
+  await env.DB.prepare(
+    `INSERT INTO threads
+     (id, kind, item_id, item_title, owner, buyer_name, offered_item_id, offered_item_title, trade_type, trade_days, created_at)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?)`
+  ).bind(
+    id, b.kind === "trade" ? "trade" : "buy", b.itemId, listing.title, listing.owner, user.username,
+    b.offeredItemId || null, b.offeredItemTitle || null, b.tradeType || null, b.tradeDays || null, Date.now()
+  ).run();
+
+  const messageText = b.message || "";
+  const msgId = makeId("msg");
+  await env.DB.prepare("INSERT INTO messages (id, thread_id, from_name, text, at) VALUES (?,?,?,?,?)")
+    .bind(msgId, id, user.username, messageText, Date.now()).run();
+
+  const owner = await env.DB.prepare("SELECT email FROM users WHERE username = ?").bind(listing.owner).first();
+  if (owner?.email) {
+    const { subject, html } = messageEmail(user.username, listing.title, messageText);
+    await sendEmail(env, owner.email, subject, html);
+  }
+
+  return json(await fullThread(env, id));
+}
