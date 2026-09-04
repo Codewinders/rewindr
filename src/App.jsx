@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { api } from "./api.js";
 import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard, Disc } from "lucide-react";
 
-const DEMO_VERIFY_CODE = "123456"; // visas i UI i väntan på riktig e-postutskick från backend
-
 const FORMATS = ["VHS", "DVD", "Blu-ray", "4K Blu-ray"];
 const FORMAT_PRICE_HINT = {
   VHS: "8–15 kr/dag",
@@ -11,7 +9,7 @@ const FORMAT_PRICE_HINT = {
   "Blu-ray": "20–35 kr/dag",
   "4K Blu-ray": "30–50 kr/dag",
 };
-const PLATFORMS = ["Nintendo Switch", "Nintendo Switch 2", "Xbox One", "Xbox Series X", "Xbox Series S", "PlayStation 4", "PlayStation 5"];
+const PLATFORMS = ["Nintendo Switch", "Nintendo Switch 2", "Xbox One", "Xbox Series X", "PlayStation", "PlayStation 2", "PlayStation 4", "PlayStation 5"];
 const DELIVERY_LABELS = { pickup: "Endast hämtning", ship: "Endast frakt", both: "Hämtning eller frakt" };
 const RENT_FEE_PCT = 15;
 const TRADE_FEE_PCT = 5;
@@ -114,7 +112,7 @@ function Marquee({ query, setQuery }) {
           REWINDR
         </h1>
         <p className="mt-5 text-sm sm:text-base max-w-md mx-auto" style={{ ...fontBody, color: "#a99bc4" }}>
-          Hyr och byt filmer och TV-spel med folk i din närhet — riktiga kopior, riktiga hyllor.
+          Hyr, köp eller byt filmer och TV-spel med folk i din närhet — riktiga kopior, riktiga hyllor.
         </p>
         <div className="mt-6 max-w-sm mx-auto relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#6d5d8a" }} />
@@ -251,8 +249,9 @@ function AuthPanel({ name, accounts, onAuthChange }) {
     if (password !== confirm) return setError("Lösenorden matchar inte.");
     setBusy(true);
     try {
-      await api.register(u, em, password);
+      const data = await api.register(u, em, password);
       setPendingVerify(u);
+      if (data.emailWarning) setError(data.emailWarning);
     } catch (err) {
       setError(err.message || "Något gick fel.");
     } finally {
@@ -293,7 +292,7 @@ function AuthPanel({ name, accounts, onAuthChange }) {
       <div className="mb-4 rounded-xl border p-4 max-w-sm mx-auto" style={{ borderColor: "#3a2a55", background: "#140b22", ...fontBody }}>
         <div className="text-sm mb-2" style={{ color: "#f3eefc" }}>Verifiera kontot "{pendingVerify}"</div>
         <p className="text-[11px] mb-2" style={{ color: "#6d5d8a" }}>
-          Demo-läge: ingen riktig e-post skickas än. Ange koden <strong>{DEMO_VERIFY_CODE}</strong> för att simulera verifiering.
+          Vi har skickat en 6-siffrig kod till din e-post. Ange den nedan (kolla även skräpposten om du inte ser den).
         </p>
         <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Verifieringskod"
           onKeyDown={(e) => { if (e.key === "Enter") submitVerify(e); }}
@@ -561,7 +560,9 @@ function Cassette({ item, onOpen }) {
         <h3 className="text-base leading-tight" style={{ ...fontDisplay, color: "#f3eefc" }}>{item.title}</h3>
         <div className="flex items-center justify-between mt-2 text-xs" style={fontBody}>
           <span style={{ color }}>{item.genre}{item.format ? ` · ${item.format}` : ""}</span>
-          <span style={{ color: "#ffe94a" }}>{item.price} kr/dag</span>
+          <span style={{ color: "#ffe94a" }}>
+            {item.rentable ? `${item.price} kr/dag` : item.forSale && item.salePrice ? `${item.salePrice} kr` : item.forSale ? "Köp" : "Byte"}
+          </span>
         </div>
         <div className="flex items-center justify-between mt-1 text-[11px]" style={{ color: "#8a7aa8" }}>
           <span className="flex items-center gap-1">
@@ -835,7 +836,9 @@ function ItemModal({ item, onClose, onRent, onRemove, alreadyRented, activeRenta
               <User size={14} /> {item.owner}
               {accounts[item.owner]?.verified && <ShieldCheck size={13} style={{ color: "#4ade80" }} />}
             </span>
-            <span style={{ color: "#ffe94a" }}>{item.price} kr/dag</span>
+            <span style={{ color: "#ffe94a" }}>
+              {item.rentable ? `${item.price} kr/dag` : item.forSale && item.salePrice ? `${item.salePrice} kr` : ""}
+            </span>
           </div>
           <OwnerReviews owner={item.owner} reviews={reviews} name={name} onAddReview={onAddReview} isOwner={isOwner} />
           <div className="mt-4" />
@@ -899,7 +902,9 @@ function ItemModal({ item, onClose, onRent, onRemove, alreadyRented, activeRenta
             </div>
           ) : (
             <div className="space-y-2">
-              <RentFlow item={item} alreadyRented={alreadyRented} activeRental={activeRental} name={name} onConfirm={(delivery, shipCost, days, rentCost) => onRent(item, delivery, shipCost, days, rentCost)} />
+              {item.rentable && (
+                <RentFlow item={item} alreadyRented={alreadyRented} activeRental={activeRental} name={name} onConfirm={(delivery, shipCost, days, rentCost) => onRent(item, delivery, shipCost, days, rentCost)} />
+              )}
 
               {myThread ? (
                 <div>
@@ -951,6 +956,8 @@ function ListForm({ name, onAdd }) {
   const [price, setPrice] = useState(15);
   const [note, setNote] = useState("");
   const [forSale, setForSale] = useState(false);
+  const [rentable, setRentable] = useState(true);
+  const [salePrice, setSalePrice] = useState("");
   const [delivery, setDelivery] = useState("pickup");
   const [shippingPrice, setShippingPrice] = useState(35);
   const [replacementValue, setReplacementValue] = useState(100);
@@ -1010,10 +1017,11 @@ function ListForm({ name, onAdd }) {
     setFormError("");
     if (!title.trim()) return setFormError("Titel krävs.");
     if (!name) return setFormError("Du måste vara inloggad.");
+    if (!rentable && !forSale && !tradeable) return setFormError("Välj minst ett: hyra ut, sälja eller byta.");
     const cleanPrice = Math.max(0, Number(price) || 0);
     const cleanShipping = Math.max(0, Number(shippingPrice) || 0);
     const cleanReplacement = Math.max(0, Number(replacementValue) || 0);
-    if (cleanPrice === 0) return setFormError("Pris per dag måste vara högre än 0 kr.");
+    if (rentable && cleanPrice === 0) return setFormError("Pris per dag måste vara högre än 0 kr när titeln kan hyras.");
     onAdd({
       id: "item-" + Date.now(),
       title: title.trim(),
@@ -1024,13 +1032,15 @@ function ListForm({ name, onAdd }) {
       owner: name,
       note: note.trim() || "Ingen extra info.",
       imageUrl,
+      rentable,
       forSale,
+      salePrice: forSale && salePrice ? Math.max(0, Number(salePrice) || 0) : null,
       delivery,
       shippingPrice: delivery === "pickup" ? 0 : cleanShipping,
       replacementValue: cleanReplacement,
       tradeable,
     });
-    setTitle(""); setNote(""); setForSale(false); setTradeable(false);
+    setTitle(""); setNote(""); setForSale(false); setTradeable(false); setRentable(true); setSalePrice("");
     setImageUrl(null); setImagePreview(null);
   };
 
@@ -1080,11 +1090,39 @@ function ListForm({ name, onAdd }) {
           {type === "movie" && <p className="text-[11px] mt-1" style={{ color: "#6d5d8a" }}>Ungefärligt pris för {format}: {FORMAT_PRICE_HINT[format]}</p>}
         </div>
       )}
+
       <div>
-        <label className="text-xs" style={{ color: "#8a7aa8" }}>Pris per dag (kr)</label>
-        <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)}
-          className="w-full mt-1 px-3 py-2 rounded-md outline-none" style={inputStyle} />
+        <label className="text-xs" style={{ color: "#8a7aa8" }}>Vad erbjuds?</label>
+        <div className="mt-1.5 space-y-2">
+          <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#c9b8e0" }}>
+            <input type="checkbox" checked={rentable} onChange={(e) => setRentable(e.target.checked)} />
+            Hyra ut (pris per dag)
+          </label>
+          <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#c9b8e0" }}>
+            <input type="checkbox" checked={forSale} onChange={(e) => setForSale(e.target.checked)} />
+            Till försäljning (köpa loss)
+          </label>
+          <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#c9b8e0" }}>
+            <input type="checkbox" checked={tradeable} onChange={(e) => setTradeable(e.target.checked)} />
+            Öppen för byte — lägre avgift ({TRADE_FEE_PCT}% mot {RENT_FEE_PCT}% för hyra)
+          </label>
+        </div>
       </div>
+
+      {rentable && (
+        <div>
+          <label className="text-xs" style={{ color: "#8a7aa8" }}>Pris per dag (kr)</label>
+          <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)}
+            className="w-full mt-1 px-3 py-2 rounded-md outline-none" style={inputStyle} />
+        </div>
+      )}
+      {forSale && (
+        <div>
+          <label className="text-xs" style={{ color: "#8a7aa8" }}>Säljpris (kr, valfritt)</label>
+          <input type="number" min="0" value={salePrice} onChange={(e) => setSalePrice(e.target.value)}
+            className="w-full mt-1 px-3 py-2 rounded-md outline-none" style={inputStyle} placeholder="Lämna tomt om ni vill komma överens i chatten" />
+        </div>
+      )}
       <div>
         <label className="text-xs" style={{ color: "#8a7aa8" }}>Skick / anteckning</label>
         <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2}
@@ -1106,20 +1144,14 @@ function ListForm({ name, onAdd }) {
           <p className="text-[11px] mt-1" style={{ color: "#6d5d8a" }}>Typiskt 25–40 kr för brev, 60–90 kr för paket.</p>
         </div>
       )}
-      <div>
-        <label className="text-xs" style={{ color: "#8a7aa8" }}>Ersättningsvärde vid skada/förlust (kr)</label>
-        <input type="number" min="0" value={replacementValue} onChange={(e) => setReplacementValue(e.target.value)}
-          className="w-full mt-1 px-3 py-2 rounded-md outline-none" style={inputStyle} />
-        <p className="text-[11px] mt-1" style={{ color: "#6d5d8a" }}>Hålls som deposition hos hyresgästen. Sätt gärna till ca 70–80% av nuvarande butikspris.</p>
-      </div>
-      <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#8a7aa8" }}>
-        <input type="checkbox" checked={forSale} onChange={(e) => setForSale(e.target.checked)} />
-        Går även att köpa loss (visas som "säljbar" i annonsen)
-      </label>
-      <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#8a7aa8" }}>
-        <input type="checkbox" checked={tradeable} onChange={(e) => setTradeable(e.target.checked)} />
-        Öppen för byte mot annan titel (permanent eller tillfälligt) — lägre avgift ({TRADE_FEE_PCT}% mot {RENT_FEE_PCT}% för vanlig hyra)
-      </label>
+      {rentable && (
+        <div>
+          <label className="text-xs" style={{ color: "#8a7aa8" }}>Ersättningsvärde vid skada/förlust (kr)</label>
+          <input type="number" min="0" value={replacementValue} onChange={(e) => setReplacementValue(e.target.value)}
+            className="w-full mt-1 px-3 py-2 rounded-md outline-none" style={inputStyle} />
+          <p className="text-[11px] mt-1" style={{ color: "#6d5d8a" }}>Hålls som deposition hos hyresgästen. Sätt gärna till ca 70–80% av nuvarande butikspris.</p>
+        </div>
+      )}
       {formError && <div className="text-xs" style={{ color: "#ff8a8a" }}>{formError}</div>}
       <button type="button" onClick={submit} className="w-full py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm"
         style={{ ...fontDisplay, fontSize: "16px", background: "#21e6ec", color: "#0a0612", boxShadow: "0 0 12px #21e6ec40" }}>
@@ -1201,7 +1233,7 @@ Det finns en anledning att DVD:er och Blu-ray fortfarande säljer, trots allt. D
 
 Rewindr är till för dig som fortfarande har en hylla med filmer eller spel hemma. Som hellre lånar av en granne än scrollar bland förslag i en app. Som tycker det är lite skönt att äga saker, inte bara ha tillgång till dem.
 
-En marknadsplats för att hyra och byta det som faktiskt finns
+En marknadsplats för att hyra, köpa och byta det som faktiskt finns
 
 Du lägger upp det du redan har. Andra hyr eller byter det de faktiskt vill se — inte det en algoritm råkar föreslå just nu.
 
@@ -1225,6 +1257,7 @@ const FAQ_ITEMS = [
   { q: "Hur mycket kostar det att hyra ut?", a: "Rewindr tar en provision på hyresintäkter. Du ser alltid tydligt vad du får innan du lägger upp en titel." },
   { q: "Måste jag betala för att skapa konto?", a: "Nej, det är gratis att registrera sig, bläddra och lägga upp titlar." },
   { q: "Kan jag byta istället för att hyra?", a: "Ja — märk din titel som öppen för byte när du lägger upp den, så kan andra föreslå byten, permanenta eller tillfälliga." },
+  { q: "Kan jag bara lägga upp något till försäljning, utan att hyra ut det?", a: "Ja — kryssa bara i \"Till försäljning\" och låt \"Hyra ut\" vara okryssad när du lägger upp titeln, så visas den enbart som en köp-annons." },
   { q: "Vilka betalsätt stöds?", a: "Kort, hanterat säkert via Stripe. Fler betalsätt kan tillkomma längre fram." },
   { q: "Var är Rewindr tillgängligt?", a: "Rewindr fungerar i hela Sverige, men vi växer stad för stad — så utbudet kan variera beroende på var du bor." },
 ];

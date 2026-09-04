@@ -1,4 +1,15 @@
-import { hashPassword, json, readJson, DEMO_VERIFY_CODE } from "../../lib/db.js";
+import { hashPassword, json, readJson } from "../../lib/db.js";
+import { sendEmail, verifyEmail } from "../../lib/email.js";
+
+const CODE_TTL_MS = 15 * 60 * 1000; // 15 minuter
+
+function makeSixDigitCode() {
+  // crypto.getRandomValues ger en kryptografiskt säker slumpkälla,
+  // % 1000000 för att få exakt sex siffror (med ledande nollor bevarade).
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  return String(arr[0] % 1000000).padStart(6, "0");
+}
 
 export async function onRequestPost({ request, env }) {
   const { username, email, password } = await readJson(request);
@@ -17,16 +28,31 @@ export async function onRequestPost({ request, env }) {
   const isFirst = countRow.c === 0;
   // ADMIN_USERNAME (satt i Cloudflare Pages → Settings → Environment
   // variables) garanterar att just DET användarnamnet blir admin, oavsett
-  // registreringsordning. Saknas den variabeln: första kontot blir admin
-  // som tidigare (bra nog för snabb testning, men sätt ADMIN_USERNAME
-  // innan riktig lansering så ingen annan kan hinna före).
+  // registreringsordning. Saknas den variabeln: första kontot blir admin.
   const isDesignatedAdmin = env.ADMIN_USERNAME && env.ADMIN_USERNAME.trim() === u;
   const isAdmin = isDesignatedAdmin || isFirst;
 
-  await env.DB.prepare(
-    `INSERT INTO users (username, email, password_hash, salt, verified, is_admin, banned, created_at)
-     VALUES (?, ?, ?, ?, 0, ?, 0, ?)`
-  ).bind(u, em, hash, salt, isAdmin ? 1 : 0, Date.now()).run();
+  const code = makeSixDigitCode();
+  const expires = Date.now() + CODE_TTL_MS;
 
-  return json({ ok: true, needsVerify: true, demoCode: DEMO_VERIFY_CODE });
+  await env.DB.prepare(
+    `INSERT INTO users (username, email, password_hash, salt, verified, is_admin, banned, verify_code, verify_code_expires, created_at)
+     VALUES (?, ?, ?, ?, 0, ?, 0, ?, ?, ?)`
+  ).bind(u, em, hash, salt, isAdmin ? 1 : 0, code, expires, Date.now()).run();
+
+  const { subject, html } = verifyEmail(code);
+  const result = await sendEmail(env, em, subject, html);
+
+  if (!result.ok) {
+    // Kontot skapades ändå (så användaren inte behöver börja om), men vi
+    // är ärliga om att mejlet inte gick fram — annars hade de aldrig
+    // kunnat verifiera sig alls.
+    return json({
+      ok: true,
+      needsVerify: true,
+      emailWarning: "Kontot skapades, men vi kunde inte skicka verifieringsmejlet just nu: " + result.error,
+    });
+  }
+
+  return json({ ok: true, needsVerify: true });
 }

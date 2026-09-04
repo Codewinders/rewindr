@@ -75,8 +75,7 @@ npx wrangler pages dev dist --d1 DB=rewindr-db
 
 ## Vad som fortfarande är förenklat
 
-- **E-postverifiering vid registrering** använder fortfarande en
-  hårdkodad kod (`123456`) istället för att skicka en riktig kod via
-  Resend — bra att veta, men lätt att koppla på riktigt senare
-  (samma Resend-konto du redan satt upp i steg 4 räcker).
-- **Betalningar** finns inte alls än — nästa steg dit är Stripe.
+- **E-postverifiering** skickar nu riktiga koder via Resend — inget
+  demo-läge längre.
+- **Betalningar** hanteras via Stripe (se separat dokumentation i
+  chatten för att växla från test- till skarpt läge).

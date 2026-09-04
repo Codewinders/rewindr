@@ -17,6 +17,7 @@ export async function onRequestPost({ request, env }) {
   const listing = await env.DB.prepare("SELECT * FROM listings WHERE id = ?").bind(b.itemId).first();
   if (!listing) return json({ error: "Titeln finns inte." }, 404);
   if (listing.owner === user.username) return json({ error: "Du kan inte hyra din egen titel." }, 400);
+  if (!listing.rentable) return json({ error: "Den här titeln kan inte hyras — bara köpas eller bytas." }, 400);
 
   const owner = await env.DB.prepare("SELECT * FROM users WHERE username = ?").bind(listing.owner).first();
   if (!owner?.stripe_account_id || !owner.stripe_charges_enabled) {

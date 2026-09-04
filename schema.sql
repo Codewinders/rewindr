@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
   banned INTEGER NOT NULL DEFAULT 0,
   stripe_account_id TEXT,
   stripe_charges_enabled INTEGER NOT NULL DEFAULT 0,
+  verify_code TEXT,
+  verify_code_expires INTEGER,
   created_at INTEGER NOT NULL
 );
 
@@ -30,7 +32,9 @@ CREATE TABLE IF NOT EXISTS listings (
   owner TEXT NOT NULL,
   note TEXT,
   image_url TEXT,
+  rentable INTEGER NOT NULL DEFAULT 1,
   for_sale INTEGER NOT NULL DEFAULT 0,
+  sale_price INTEGER,
   delivery TEXT NOT NULL DEFAULT 'pickup',
   shipping_price INTEGER NOT NULL DEFAULT 0,
   replacement_value INTEGER NOT NULL DEFAULT 0,
