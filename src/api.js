@@ -66,6 +66,7 @@ export const api = {
   listings: () => request("GET", "/api/listings"),
   createListing: (listing) => request("POST", "/api/listings", listing),
   deleteListing: (id) => request("DELETE", `/api/listings/${id}`),
+  updateListing: (id, listing) => request("PATCH", `/api/listings/${id}`, listing),
   uploadImage: (file) => uploadFile("/api/upload", file),
 
   // rentals

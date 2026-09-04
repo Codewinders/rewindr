@@ -868,7 +868,7 @@ function TradeFlow({ item, myItems, onPropose }) {
   );
 }
 
-function ItemModal({ item, onClose, onRent, onPurchase, onRemove, alreadyRented, activeRental, onReturnRental, isOwner, name, threads, onStartThread, onReply, myItems, onProposeTrade, reviews, onAddReview, accounts }) {
+function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, alreadyRented, activeRental, onReturnRental, isOwner, name, threads, onStartThread, onReply, myItems, onProposeTrade, reviews, onAddReview, accounts }) {
   const [askOpen, setAskOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [openThreadId, setOpenThreadId] = useState(null);
@@ -940,11 +940,18 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, alreadyRented,
                   </button>
                 </div>
               )}
-              <button onClick={() => onRemove(item)}
-                className="w-full py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 mb-4"
-                style={{ ...fontDisplay, fontSize: "16px", background: "#3a2a55", color: "#ff8a8a" }}>
-                <Trash2 size={16} /> TA BORT FRÅN HYLLAN
-              </button>
+              <div className="flex gap-2 mb-4">
+                <button onClick={() => onEdit(item)}
+                  className="flex-1 py-2.5 rounded-lg text-sm flex items-center justify-center gap-2"
+                  style={{ ...fontDisplay, fontSize: "16px", background: "transparent", border: "1px solid #21e6ec66", color: "#21e6ec" }}>
+                  Redigera
+                </button>
+                <button onClick={() => onRemove(item)}
+                  className="flex-1 py-2.5 rounded-lg text-sm flex items-center justify-center gap-2"
+                  style={{ ...fontDisplay, fontSize: "16px", background: "#3a2a55", color: "#ff8a8a" }}>
+                  <Trash2 size={16} /> TA BORT
+                </button>
+              </div>
               {itemThreads.length > 0 && (
                 <div className="border-t pt-4" style={{ borderColor: "#3a2a55" }}>
                   <div className="flex items-center gap-2 text-xs mb-2" style={{ color: "#ffe94a", ...fontDisplay, fontSize: "13px" }}>
@@ -1035,22 +1042,22 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, alreadyRented,
 }
 
 // ---------- list form ----------
-function ListForm({ name, onAdd }) {
-  const [title, setTitle] = useState("");
-  const [type, setType] = useState("movie");
-  const [format, setFormat] = useState(FORMATS[1]);
-  const [genre, setGenre] = useState(GENRES[0]);
-  const [price, setPrice] = useState(15);
-  const [note, setNote] = useState("");
-  const [forSale, setForSale] = useState(false);
-  const [rentable, setRentable] = useState(true);
-  const [salePrice, setSalePrice] = useState("");
-  const [delivery, setDelivery] = useState("pickup");
-  const [shippingPrice, setShippingPrice] = useState(35);
-  const [replacementValue, setReplacementValue] = useState(100);
-  const [tradeable, setTradeable] = useState(false);
-  const [imageUrl, setImageUrl] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
+  const [title, setTitle] = useState(editingItem?.title || "");
+  const [type, setType] = useState(editingItem?.type || "movie");
+  const [format, setFormat] = useState(editingItem?.format || FORMATS[1]);
+  const [genre, setGenre] = useState(editingItem?.genre || GENRES[0]);
+  const [price, setPrice] = useState(editingItem?.price || 15);
+  const [note, setNote] = useState(editingItem?.note || "");
+  const [forSale, setForSale] = useState(editingItem?.forSale || false);
+  const [rentable, setRentable] = useState(editingItem ? editingItem.rentable : true);
+  const [salePrice, setSalePrice] = useState(editingItem?.salePrice || "");
+  const [delivery, setDelivery] = useState(editingItem?.delivery || "pickup");
+  const [shippingPrice, setShippingPrice] = useState(editingItem?.shippingPrice || 35);
+  const [replacementValue, setReplacementValue] = useState(editingItem?.replacementValue || 100);
+  const [tradeable, setTradeable] = useState(editingItem?.tradeable || false);
+  const [imageUrl, setImageUrl] = useState(editingItem?.imageUrl || null);
+  const [imagePreview, setImagePreview] = useState(editingItem?.imageUrl || null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
 
@@ -1109,8 +1116,8 @@ function ListForm({ name, onAdd }) {
     const cleanShipping = Math.max(0, Number(shippingPrice) || 0);
     const cleanReplacement = Math.max(0, Number(replacementValue) || 0);
     if (rentable && cleanPrice === 0) return setFormError("Pris per dag måste vara högre än 0 kr när titeln kan hyras.");
-    onAdd({
-      id: "item-" + Date.now(),
+
+    const payload = {
       title: title.trim(),
       type,
       format: format,
@@ -1126,14 +1133,26 @@ function ListForm({ name, onAdd }) {
       shippingPrice: delivery === "pickup" ? 0 : cleanShipping,
       replacementValue: cleanReplacement,
       tradeable,
-    });
+    };
+
+    if (editingItem) {
+      onUpdate(editingItem.id, payload);
+      return;
+    }
+
+    onAdd({ id: "item-" + Date.now(), ...payload });
     setTitle(""); setNote(""); setForSale(false); setTradeable(false); setRentable(true); setSalePrice("");
     setImageUrl(null); setImagePreview(null);
   };
 
   return (
     <div className="max-w-md space-y-4 rounded-2xl border p-5" style={{ borderColor: "#3a2a55", background: "#140b22", ...fontBody }}>
-      <h2 className="text-2xl mb-1" style={{ ...fontDisplay, color: "#ffe94a" }}>Lägg upp en titel</h2>
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="text-2xl" style={{ ...fontDisplay, color: "#ffe94a" }}>{editingItem ? "Redigera titel" : "Lägg upp en titel"}</h2>
+        {editingItem && (
+          <button type="button" onClick={onCancelEdit} className="text-xs" style={{ color: "#8a7aa8" }}>Avbryt</button>
+        )}
+      </div>
 
       <div>
         <label className="text-xs" style={{ color: "#8a7aa8" }}>Omslagsbild (valfritt)</label>
@@ -1242,7 +1261,7 @@ function ListForm({ name, onAdd }) {
       {formError && <div className="text-xs" style={{ color: "#ff8a8a" }}>{formError}</div>}
       <button type="button" onClick={submit} className="w-full py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm"
         style={{ ...fontDisplay, fontSize: "16px", background: "#21e6ec", color: "#0a0612", boxShadow: "0 0 12px #21e6ec40" }}>
-        <Plus size={16} /> LÄGG TILL I HYLLAN
+        {editingItem ? "SPARA ÄNDRINGAR" : <><Plus size={16} /> LÄGG TILL I HYLLAN</>}
       </button>
       <p className="text-[11px] pt-1" style={{ color: "#6d5d8a" }}>Titlar du lägger upp blir synliga för alla som öppnar Rewindr.</p>
     </div>
@@ -1539,6 +1558,7 @@ function RewindrAppInner() {
   const [offerFilter, setOfferFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [openItem, setOpenItem] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
   const [adminAccounts, setAdminAccounts] = useState({});
   const [infoPage, setInfoPage] = useState(null);
 
@@ -1574,6 +1594,12 @@ function RewindrAppInner() {
   const handleAdd = withErrorHandling(async (item) => {
     await api.createListing(item);
     setTab("browse");
+  });
+
+  const handleUpdateListing = withErrorHandling(async (id, item) => {
+    await api.updateListing(id, item);
+    setEditingItem(null);
+    setTab("myListings");
   });
 
   const handleRent = withErrorHandling(async (item, delivery, shipCost, days) => {
@@ -1648,7 +1674,7 @@ function RewindrAppInner() {
         )}
         <AuthPanel name={name} accounts={accounts} onAuthChange={handleAuthChange} />
         <Marquee query={query} setQuery={setQuery} />
-        <Tabs active={tab} setActive={setTab} showAdmin={isAdmin} showMyListings={!!name} />
+        <Tabs active={tab} setActive={(id) => { setEditingItem(null); setTab(id); }} showAdmin={isAdmin} showMyListings={!!name} />
 
         {!ready ? (
           <div className="text-center py-16" style={{ color: "#6d5d8a", ...fontBody }}>Spolar upp hyllan…</div>
@@ -1693,7 +1719,7 @@ function RewindrAppInner() {
             )}
             {tab === "list" && (
               name
-                ? <ListForm name={name} onAdd={handleAdd} />
+                ? <ListForm name={name} onAdd={handleAdd} onUpdate={handleUpdateListing} editingItem={editingItem} onCancelEdit={() => { setEditingItem(null); setTab("myListings"); }} />
                 : <div className="text-xs rounded-lg p-4 max-w-sm" style={{ background: "#21e6ec15", color: "#c9b8e0", ...fontBody }}>Logga in högst upp för att lägga upp en titel.</div>
             )}
             {tab === "myListings" && (
@@ -1761,6 +1787,7 @@ function RewindrAppInner() {
         onClose={() => setOpenItem(null)}
         onRent={handleRent}
         onPurchase={handlePurchase}
+        onEdit={(item) => { setEditingItem(item); setOpenItem(null); setTab("list"); }}
         onRemove={handleRemove}
         alreadyRented={openItem ? isRented(openItem) : false}
         activeRental={openItem ? activeRentalFor(openItem) : null}
