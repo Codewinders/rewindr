@@ -1166,6 +1166,158 @@ function MyRentals({ rentals, listings, name, onReturn }) {
   );
 }
 
+// ---------- info pages ----------
+const ABOUT_TEXT = `Kommer du också ihåg känslan?
+
+Att gå in i videobutiken en fredagskväll, kolla igenom hyllorna, bestämma sig för en film. Den var din den kvällen. Ingen kunde plötsligt ta bort den mitt i, ingen kunde bestämma att den "inte längre ingår."
+
+Vi saknar det.
+
+Streaming skulle göra allt enklare. Ibland känns det tvärtom.
+
+Man betalar för flera tjänster samtidigt, och ändå försvinner filmer man ville se igen — flyttade till en annan tjänst, eller bara bortplockade. Man har betalat i flera år utan att egentligen äga något av det. Ingen fil, ingen skiva, ingen möjlighet att låna ut den till en kompis eller sälja den vidare.
+
+Det är inte hela världen. Men det är en udda känsla — att betala för något man aldrig faktiskt får.
+
+Fysisk media har aldrig riktigt försvunnit
+
+Det finns en anledning att DVD:er och Blu-ray fortfarande säljer, trots allt. Det handlar inte bara om nostalgi — det handlar om att det som är ditt faktiskt förblir ditt, utan att någon plattform kan ändra på det senare.
+
+Rewindr är till för dig som fortfarande har en hylla med filmer eller spel hemma. Som hellre lånar av en granne än scrollar bland förslag i en app. Som tycker det är lite skönt att äga saker, inte bara ha tillgång till dem.
+
+En marknadsplats för att hyra och byta det som faktiskt finns
+
+Du lägger upp det du redan har. Andra hyr eller byter det de faktiskt vill se — inte det en algoritm råkar föreslå just nu.
+
+Vi börjar smått, i ditt närområde
+
+Rewindr lanseras inte överallt på en gång. Vi börjar lokalt och växer i takt med att fler är med. Är du en av de första formar du en del av hur det blir. Känner du någon i närheten som skulle gilla det — dela det gärna vidare.
+
+Välkommen till Rewindr.`;
+
+const HOW_IT_WORKS = [
+  { title: "1. Skapa ett konto", text: "Registrera dig med ett användarnamn, e-post och lösenord. Verifiera kontot, så är du redo." },
+  { title: "2. Lägg upp det du redan har", text: "Filmer eller TV-spel som ligger hemma i en hylla — lägg upp dem med bild, pris per dag och hur de kan hämtas eller skickas." },
+  { title: "3. Bläddra och hitta något att hyra", text: "Sök bland andras titlar i Bläddra-fliken. Hittar du något du vill hyra? Klicka Hyr nu, välj antal dagar, betala tryggt med kort eller Klarna." },
+  { title: "4. Hämta eller vänta på leverans", text: "Beroende på vad uthyraren erbjuder — hämta själv eller få den skickad hem." },
+  { title: "5. Lämna tillbaka i tid", text: "När lånetiden är slut, lämna tillbaka eller skicka tillbaka titeln. Markera den som återlämnad i appen." },
+  { title: "6. Betalt direkt till dig", text: "Som uthyrare går din del av hyran automatiskt till ditt kopplade betalningskonto — ingen väntan, inget krångel." },
+];
+
+const FAQ_ITEMS = [
+  { q: "Vad händer om något går sönder eller inte lämnas tillbaka?", a: "Varje titel har ett ersättningsvärde som uthyraren sätter när de lägger upp den. Vid skada eller utebliven återlämning kan uthyraren och hyresgästen använda det värdet som utgångspunkt för att lösa det sinsemellan." },
+  { q: "Hur mycket kostar det att hyra ut?", a: "Rewindr tar en provision på hyresintäkter. Du ser alltid tydligt vad du får innan du lägger upp en titel." },
+  { q: "Måste jag betala för att skapa konto?", a: "Nej, det är gratis att registrera sig, bläddra och lägga upp titlar." },
+  { q: "Kan jag byta istället för att hyra?", a: "Ja — märk din titel som öppen för byte när du lägger upp den, så kan andra föreslå byten, permanenta eller tillfälliga." },
+  { q: "Vilka betalsätt stöds?", a: "Kort och Klarna, hanterat säkert via Stripe." },
+  { q: "Var är Rewindr tillgängligt?", a: "Rewindr fungerar i hela Sverige, men vi växer stad för stad — så utbudet kan variera beroende på var du bor." },
+];
+
+function InfoModal({ page, onClose }) {
+  if (!page) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(5,2,12,0.85)" }} onClick={onClose}>
+      <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border p-6" style={{ borderColor: "#3a2a55", background: "#140b22" }} onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl" style={{ ...fontDisplay, color: "#ffe94a" }}>
+            {page === "about" && "Om Rewindr"}
+            {page === "how" && "Så fungerar det"}
+            {page === "faq" && "Vanliga frågor"}
+            {page === "contact" && "Kontakt"}
+          </h2>
+          <button onClick={onClose} style={{ color: "#8a7aa8" }}><X size={20} /></button>
+        </div>
+
+        {page === "about" && (
+          <div className="text-sm space-y-3 whitespace-pre-line" style={{ color: "#c9b8e0", ...fontBody }}>{ABOUT_TEXT}</div>
+        )}
+
+        {page === "how" && (
+          <div className="space-y-4">
+            {HOW_IT_WORKS.map((step) => (
+              <div key={step.title}>
+                <div className="text-sm mb-1" style={{ color: "#ffe94a", ...fontDisplay, fontSize: "14px" }}>{step.title}</div>
+                <div className="text-sm" style={{ color: "#c9b8e0", ...fontBody }}>{step.text}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {page === "faq" && (
+          <div className="space-y-4">
+            {FAQ_ITEMS.map((item) => (
+              <div key={item.q}>
+                <div className="text-sm mb-1" style={{ color: "#21e6ec", ...fontBody, fontWeight: 600 }}>{item.q}</div>
+                <div className="text-sm" style={{ color: "#c9b8e0", ...fontBody }}>{item.a}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {page === "contact" && (
+          <div className="text-sm space-y-3" style={{ color: "#c9b8e0", ...fontBody }}>
+            <p>Har du frågor, feedback, eller stötte du på ett problem?</p>
+            <p>
+              Mejla oss på{" "}
+              <a href="mailto:hello.rewindr@gmail.com" style={{ color: "#21e6ec" }}>hello.rewindr@gmail.com</a>
+              {" "}så återkommer vi så snart vi kan.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Footer({ onOpenInfo }) {
+  const links = [
+    { id: "about", label: "Om oss" },
+    { id: "how", label: "Så fungerar det" },
+    { id: "faq", label: "FAQ" },
+    { id: "contact", label: "Kontakt" },
+  ];
+  return (
+    <div className="max-w-5xl mx-auto px-4 pb-10 pt-6">
+      <div className="flex flex-wrap gap-4 justify-center text-xs border-t pt-6" style={{ borderColor: "#3a2a5566", ...fontBody }}>
+        {links.map((l) => (
+          <button key={l.id} onClick={() => onOpenInfo(l.id)} style={{ color: "#8a7aa8" }}>
+            {l.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CookieBanner() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem("rewindr-cookie-consent")) setVisible(true);
+  }, []);
+
+  const accept = () => {
+    localStorage.setItem("rewindr-cookie-consent", "1");
+    setVisible(false);
+  };
+
+  if (!visible) return null;
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-[60] p-4" style={{ background: "#140b22", borderTop: "1px solid #3a2a55" }}>
+      <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs" style={{ color: "#c9b8e0", ...fontBody }}>
+          Vi använder nödvändig lagring för inloggning och grundläggande, cookielös besöksstatistik. Inga spårningscookies för reklam.
+        </p>
+        <button onClick={accept} className="px-4 py-1.5 rounded-md text-xs shrink-0"
+          style={{ background: "#21e6ec", color: "#0a0612", ...fontDisplay }}>
+          OK
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ---------- app root ----------
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -1204,6 +1356,7 @@ function RewindrAppInner() {
   const [query, setQuery] = useState("");
   const [openItem, setOpenItem] = useState(null);
   const [adminAccounts, setAdminAccounts] = useState({});
+  const [infoPage, setInfoPage] = useState(null);
 
   const filtered = listings.filter((i) => {
     const typeOk = filter === "all" || i.type === filter;
@@ -1387,6 +1540,9 @@ function RewindrAppInner() {
         onAddReview={handleAddReview}
         accounts={accounts}
       />
+      <Footer onOpenInfo={setInfoPage} />
+      <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />
+      <CookieBanner />
     </div>
   );
 }
