@@ -1198,7 +1198,7 @@ Välkommen till Rewindr.`;
 const HOW_IT_WORKS = [
   { title: "1. Skapa ett konto", text: "Registrera dig med ett användarnamn, e-post och lösenord. Verifiera kontot, så är du redo." },
   { title: "2. Lägg upp det du redan har", text: "Filmer eller TV-spel som ligger hemma i en hylla — lägg upp dem med bild, pris per dag och hur de kan hämtas eller skickas." },
-  { title: "3. Bläddra och hitta något att hyra", text: "Sök bland andras titlar i Bläddra-fliken. Hittar du något du vill hyra? Klicka Hyr nu, välj antal dagar, betala tryggt med kort eller Klarna." },
+  { title: "3. Bläddra och hitta något att hyra", text: "Sök bland andras titlar i Bläddra-fliken. Hittar du något du vill hyra? Klicka Hyr nu, välj antal dagar, betala tryggt med kort." },
   { title: "4. Hämta eller vänta på leverans", text: "Beroende på vad uthyraren erbjuder — hämta själv eller få den skickad hem." },
   { title: "5. Lämna tillbaka i tid", text: "När lånetiden är slut, lämna tillbaka eller skicka tillbaka titeln. Markera den som återlämnad i appen." },
   { title: "6. Betalt direkt till dig", text: "Som uthyrare går din del av hyran automatiskt till ditt kopplade betalningskonto — ingen väntan, inget krångel." },
@@ -1209,7 +1209,7 @@ const FAQ_ITEMS = [
   { q: "Hur mycket kostar det att hyra ut?", a: "Rewindr tar en provision på hyresintäkter. Du ser alltid tydligt vad du får innan du lägger upp en titel." },
   { q: "Måste jag betala för att skapa konto?", a: "Nej, det är gratis att registrera sig, bläddra och lägga upp titlar." },
   { q: "Kan jag byta istället för att hyra?", a: "Ja — märk din titel som öppen för byte när du lägger upp den, så kan andra föreslå byten, permanenta eller tillfälliga." },
-  { q: "Vilka betalsätt stöds?", a: "Kort och Klarna, hanterat säkert via Stripe." },
+  { q: "Vilka betalsätt stöds?", a: "Kort, hanterat säkert via Stripe. Fler betalsätt kan tillkomma längre fram." },
   { q: "Var är Rewindr tillgängligt?", a: "Rewindr fungerar i hela Sverige, men vi växer stad för stad — så utbudet kan variera beroende på var du bor." },
 ];
 
