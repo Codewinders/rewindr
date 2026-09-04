@@ -13,6 +13,7 @@ const PLATFORMS = ["Nintendo Switch", "Nintendo Switch 2", "Xbox One", "Xbox Ser
 const DELIVERY_LABELS = { pickup: "Endast hämtning", ship: "Endast frakt", both: "Hämtning eller frakt" };
 const RENT_FEE_PCT = 15;
 const TRADE_FEE_PCT = 5;
+const BUY_FEE_PCT = 10;
 
 const GENRE_COLORS = {
   Skräck: "#ff2fb0",
@@ -1220,6 +1221,10 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
           <label className="text-xs" style={{ color: "#8a7aa8" }}>Pris per dag (kr)</label>
           <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)}
             className="w-full mt-1 px-3 py-2 rounded-md outline-none" style={inputStyle} />
+          <p className="text-[11px] mt-1" style={{ color: "#6d5d8a" }}>
+            Rewindr tar {RENT_FEE_PCT}% i avgift — du får ca{" "}
+            <strong style={{ color: "#c9b8e0" }}>{Math.round((Number(price) || 0) * (1 - RENT_FEE_PCT / 100))} kr/dag</strong>.
+          </p>
         </div>
       )}
       {forSale && (
@@ -1227,6 +1232,14 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
           <label className="text-xs" style={{ color: "#8a7aa8" }}>Säljpris (kr, valfritt)</label>
           <input type="number" min="0" value={salePrice} onChange={(e) => setSalePrice(e.target.value)}
             className="w-full mt-1 px-3 py-2 rounded-md outline-none" style={inputStyle} placeholder="Lämna tomt om ni vill komma överens i chatten" />
+          {salePrice ? (
+            <p className="text-[11px] mt-1" style={{ color: "#6d5d8a" }}>
+              Rewindr tar {BUY_FEE_PCT}% i avgift — du får ca{" "}
+              <strong style={{ color: "#c9b8e0" }}>{Math.round((Number(salePrice) || 0) * (1 - BUY_FEE_PCT / 100))} kr</strong>.
+            </p>
+          ) : (
+            <p className="text-[11px] mt-1" style={{ color: "#6d5d8a" }}>Om ni sätter ett pris här tar Rewindr {BUY_FEE_PCT}% i avgift vid köp.</p>
+          )}
         </div>
       )}
       <div>
