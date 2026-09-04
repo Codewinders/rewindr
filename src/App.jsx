@@ -87,19 +87,16 @@ function useRewindrData() {
 
 // ---------- shared bits ----------
 const fontDisplay = { fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.03em" };
-const fontLogo = { fontFamily: "'Monoton', cursive" };
+const fontLogo = { fontFamily: "'Anton', sans-serif" };
 const fontBody = { fontFamily: "'Space Grotesk', sans-serif" };
 
 function GlobalStyle() {
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600&display=swap');
-      @keyframes flicker {
-        0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
-        20%, 22%, 24%, 55% { opacity: 0.85; }
-      }
-      .rw-flicker { animation: flicker 5s infinite; }
-      .rw-card:hover { transform: translateY(-4px); }
+      @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600&display=swap');
+      html { font-size: 18px; }
+      .rw-card { transition: transform 0.2s ease, border-color 0.2s ease; }
+      .rw-card:hover { transform: translateY(-3px); }
     `}</style>
   );
 }
@@ -107,27 +104,26 @@ function GlobalStyle() {
 // ---------- header ----------
 function Marquee({ query, setQuery }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-fuchsia-500/30 mb-6"
-      style={{ background: "radial-gradient(ellipse at top, #22123f 0%, #0a0612 75%)" }}>
-      <div className="relative px-6 py-10 sm:py-12 text-center">
-        <div className="flex items-center justify-center gap-2 text-[11px] tracking-wide text-cyan-300/70 mb-3" style={fontBody}>
-          <Rewind size={14} /> öppet dygnet runt, lån för lån
+    <div className="relative overflow-hidden rounded-2xl border mb-8" style={{ borderColor: "#3a2a55", background: "linear-gradient(180deg, #150c24 0%, #0a0612 100%)" }}>
+      <div className="relative px-6 py-12 sm:py-16 text-center">
+        <div className="flex items-center justify-center gap-2 text-[11px] tracking-[0.15em] uppercase mb-4" style={{ ...fontBody, color: "#6d5d8a" }}>
+          <Rewind size={13} /> öppet dygnet runt · lån för lån
         </div>
-        <h1 className="text-4xl sm:text-6xl leading-none rw-flicker"
-          style={{ ...fontLogo, color: "#ff4fc0", textShadow: "0 0 4px #fff, 0 0 14px #ff2fb0, 0 0 32px #ff2fb0" }}>
+        <h1 className="text-5xl sm:text-6xl leading-none"
+          style={{ ...fontLogo, color: "#ff4fc0", textShadow: "0 0 18px #ff2fb055" }}>
           REWINDR
         </h1>
-        <p className="mt-4 text-sm sm:text-base max-w-md mx-auto" style={{ ...fontBody, color: "#c9b8e0" }}>
-          Hyr filmer och TV-spel av folk i din närhet. Ingen strömning — riktiga kopior, riktiga hyllor.
+        <p className="mt-5 text-sm sm:text-base max-w-md mx-auto" style={{ ...fontBody, color: "#a99bc4" }}>
+          Hyr och byt filmer och TV-spel med folk i din närhet — riktiga kopior, riktiga hyllor.
         </p>
-        <div className="mt-5 max-w-sm mx-auto relative">
+        <div className="mt-6 max-w-sm mx-auto relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#6d5d8a" }} />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Sök titel…"
-            className="w-full pl-9 pr-3 py-2 rounded-full outline-none text-sm"
-            style={{ ...fontBody, background: "#150c24", border: "1px solid #3a2a55", color: "#f3eefc" }}
+            className="w-full pl-9 pr-3 py-2.5 rounded-full outline-none text-sm"
+            style={{ ...fontBody, background: "#0a0612", border: "1px solid #3a2a55", color: "#f3eefc" }}
           />
         </div>
       </div>
@@ -144,16 +140,17 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
     ...(showAdmin ? [{ id: "admin", label: "Admin" }] : []),
   ];
   return (
-    <div className="flex gap-2 mb-6 border-b border-fuchsia-500/20 flex-wrap" style={fontDisplay}>
+    <div className="flex gap-1.5 mb-8 flex-wrap p-1 rounded-xl" style={{ ...fontDisplay, background: "#140b22", border: "1px solid #3a2a5566" }}>
       {tabs.map((t) => (
         <button key={t.id} onClick={() => setActive(t.id)}
-          className="px-4 py-2 text-lg relative transition-colors"
-          style={{ color: active === t.id ? (t.id === "admin" ? "#ffe94a" : "#ffe94a") : "#8a7aa8" }}>
-          {t.id === "admin" && <Crown size={14} className="inline mr-1 -mt-1" />}
+          className="px-4 py-2 text-sm rounded-lg transition-colors flex items-center gap-1.5"
+          style={{
+            letterSpacing: "0.04em",
+            color: active === t.id ? "#0a0612" : "#a99bc4",
+            background: active === t.id ? "#ffe94a" : "transparent",
+          }}>
+          {t.id === "admin" && <Crown size={13} />}
           {t.label}
-          {active === t.id && (
-            <span className="absolute left-0 right-0 -bottom-[1px] h-[2px]" style={{ background: "#ffe94a", boxShadow: "0 0 8px #ffe94a" }} />
-          )}
         </button>
       ))}
     </div>
@@ -537,9 +534,9 @@ function Cassette({ item, onOpen }) {
   return (
     <button onClick={() => onOpen(item)}
       className="rw-card text-left rounded-xl overflow-hidden border transition-transform duration-200 group"
-      style={{ borderColor: color + "55", background: "#140b22" }}>
+      style={{ borderColor: "#3a2a55", background: "#140b22" }}>
       <div className="h-28 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}22, #0a0612 80%)` }}>
-        <div className="absolute left-0 top-0 bottom-0 w-2 z-10" style={{ background: color, boxShadow: `0 0 12px ${color}` }} />
+        <div className="absolute left-0 top-0 bottom-0 w-1 z-10" style={{ background: color }} />
         {item.imageUrl ? (
           <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
         ) : (
@@ -626,7 +623,7 @@ function RentFlow({ item, alreadyRented, activeRental, name, onConfirm }) {
     return (
       <button onClick={() => setExpanded(true)}
         className="w-full py-2.5 rounded-lg text-sm"
-        style={{ ...fontDisplay, fontSize: "16px", background: "#ff2fb0", color: "#fff", boxShadow: "0 0 18px #ff2fb066" }}>
+        style={{ ...fontDisplay, fontSize: "16px", background: "#ff2fb0", color: "#fff", boxShadow: "0 0 12px #ff2fb040" }}>
         HYR NU
       </button>
     );
@@ -1106,7 +1103,7 @@ function ListForm({ name, onAdd }) {
       </label>
       {formError && <div className="text-xs" style={{ color: "#ff8a8a" }}>{formError}</div>}
       <button type="button" onClick={submit} className="w-full py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm"
-        style={{ ...fontDisplay, fontSize: "16px", background: "#21e6ec", color: "#0a0612", boxShadow: "0 0 18px #21e6ec66" }}>
+        style={{ ...fontDisplay, fontSize: "16px", background: "#21e6ec", color: "#0a0612", boxShadow: "0 0 12px #21e6ec40" }}>
         <Plus size={16} /> LÄGG TILL I HYLLAN
       </button>
       <p className="text-[11px] pt-1" style={{ color: "#6d5d8a" }}>Titlar du lägger upp blir synliga för alla som öppnar Rewindr.</p>
