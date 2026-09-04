@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { api } from "./api.js";
-import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard } from "lucide-react";
+import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard, Disc } from "lucide-react";
 
 const DEMO_VERIFY_CODE = "123456"; // visas i UI i väntan på riktig e-postutskick från backend
 
@@ -140,10 +140,10 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
     ...(showAdmin ? [{ id: "admin", label: "Admin" }] : []),
   ];
   return (
-    <div className="flex gap-1.5 mb-8 flex-wrap p-1 rounded-xl" style={{ ...fontDisplay, background: "#140b22", border: "1px solid #3a2a5566" }}>
+    <div className="flex gap-1.5 mb-8 flex-wrap justify-center p-1.5 rounded-xl" style={{ ...fontDisplay, background: "#140b22", border: "1px solid #3a2a5566" }}>
       {tabs.map((t) => (
         <button key={t.id} onClick={() => setActive(t.id)}
-          className="px-4 py-2 text-sm rounded-lg transition-colors flex items-center gap-1.5"
+          className="px-5 py-2.5 text-base rounded-lg transition-colors flex items-center gap-2"
           style={{
             letterSpacing: "0.04em",
             color: active === t.id ? "#0a0612" : "#a99bc4",
@@ -528,15 +528,29 @@ function iconFor(type) {
   return type === "game" ? Gamepad2 : Film;
 }
 
+// Liten ikon som visar exakt fysiskt format — VHS, skiva eller spelkonsol —
+// så man ser det på en blick utan att behöva läsa texten.
+function formatIcon(item) {
+  if (item.type === "game") return Gamepad2;
+  if (item.format === "VHS") return Rewind;
+  return Disc; // DVD, Blu-ray, 4K Blu-ray
+}
+
 function Cassette({ item, onOpen }) {
   const color = GENRE_COLORS[item.genre] || "#21e6ec";
   const Icon = iconFor(item.type);
+  const FormatIcon = formatIcon(item);
   return (
     <button onClick={() => onOpen(item)}
       className="rw-card text-left rounded-xl overflow-hidden border transition-transform duration-200 group"
       style={{ borderColor: "#3a2a55", background: "#140b22" }}>
       <div className="h-28 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}22, #0a0612 80%)` }}>
         <div className="absolute left-0 top-0 bottom-0 w-1 z-10" style={{ background: color }} />
+        {item.format && (
+          <div className="absolute top-2 right-2 z-10 rounded-full p-1.5" style={{ background: "rgba(10,6,18,0.75)", border: `1px solid ${color}66` }} title={item.format}>
+            <FormatIcon size={13} style={{ color }} />
+          </div>
+        )}
         {item.imageUrl ? (
           <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
         ) : (
@@ -794,6 +808,11 @@ function ItemModal({ item, onClose, onRent, onRemove, alreadyRented, activeRenta
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(5,2,12,0.8)" }} onClick={onClose}>
       <div className="w-full max-w-sm rounded-2xl border overflow-hidden max-h-[90vh] overflow-y-auto" style={{ borderColor: color + "66", background: "#140b22" }} onClick={(e) => e.stopPropagation()}>
         <div className="h-32 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}33, #0a0612 85%)` }}>
+          {item.format && (
+            <div className="absolute top-3 left-3 z-10 rounded-full p-1.5 flex items-center gap-1" style={{ background: "rgba(10,6,18,0.75)", border: `1px solid ${color}66` }}>
+              {React.createElement(formatIcon(item), { size: 13, style: { color } })}
+            </div>
+          )}
           {item.imageUrl ? (
             <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
           ) : (
