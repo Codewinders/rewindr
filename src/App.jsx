@@ -96,6 +96,11 @@ function GlobalStyle() {
       html { font-size: 18px; }
       .rw-card { transition: transform 0.2s ease, border-color 0.2s ease; }
       .rw-card:hover { transform: translateY(-3px); }
+      @keyframes rwSlideIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .rw-slide-in { animation: rwSlideIn 0.25s ease; }
     `}</style>
   );
 }
@@ -1254,7 +1259,7 @@ function MyRentals({ rentals, listings, name, onReturn }) {
     return (
       <div className="text-center py-16" style={{ ...fontBody, color: "#6d5d8a" }}>
         <Sparkles className="mx-auto mb-3" size={28} />
-        Inga lån än — bläddra runt och hitta något att spola tillbaka.
+        Inga lån att visa. Utforska vad andra lagt upp.
       </div>
     );
   }
@@ -1529,6 +1534,7 @@ class ErrorBoundary extends React.Component {
 function RewindrAppInner() {
   const { listings, name, setName, rentals, purchases, threads, accounts, reviews, ready, lastError, setLastError, refreshAll } = useRewindrData();
   const [tab, setTab] = useState("browse");
+  const [mineSection, setMineSection] = useState("rentals");
   const [filter, setFilter] = useState("all");
   const [offerFilter, setOfferFilter] = useState("all");
   const [query, setQuery] = useState("");
@@ -1707,18 +1713,30 @@ function RewindrAppInner() {
               )
             )}
             {tab === "mine" && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-lg mb-3" style={{ ...fontDisplay, color: "#ffe94a" }}>Mina lån</h3>
-                  <MyRentals rentals={rentals} listings={listings} name={name} onReturn={handleReturnRental} />
+              <div>
+                <div className="flex gap-2 mb-5 flex-wrap" style={fontBody}>
+                  {[["rentals", "Mina lån"], ["purchases", "Mina köp"], ["sales", "Mina sålda"]].map(([id, label]) => (
+                    <button key={id} onClick={() => setMineSection(id)}
+                      className="px-4 py-2 rounded-full text-xs border transition-colors"
+                      style={{
+                        borderColor: mineSection === id ? "#ffe94a" : "#3a2a55",
+                        color: mineSection === id ? "#ffe94a" : "#8a7aa8",
+                        background: mineSection === id ? "#ffe94a1a" : "transparent",
+                      }}>
+                      {label}
+                    </button>
+                  ))}
                 </div>
-                <div>
-                  <h3 className="text-lg mb-3" style={{ ...fontDisplay, color: "#4ade80" }}>Mina köp</h3>
-                  <MyPurchases purchases={purchases} listings={listings} name={name} mode="buyer" />
-                </div>
-                <div>
-                  <h3 className="text-lg mb-3" style={{ ...fontDisplay, color: "#4ade80" }}>Mina sålda</h3>
-                  <MyPurchases purchases={purchases} listings={listings} name={name} mode="seller" />
+                <div key={mineSection} className="rw-slide-in">
+                  {mineSection === "rentals" && (
+                    <MyRentals rentals={rentals} listings={listings} name={name} onReturn={handleReturnRental} />
+                  )}
+                  {mineSection === "purchases" && (
+                    <MyPurchases purchases={purchases} listings={listings} name={name} mode="buyer" />
+                  )}
+                  {mineSection === "sales" && (
+                    <MyPurchases purchases={purchases} listings={listings} name={name} mode="seller" />
+                  )}
                 </div>
               </div>
             )}
