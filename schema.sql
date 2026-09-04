@@ -35,12 +35,31 @@ CREATE TABLE IF NOT EXISTS listings (
   rentable INTEGER NOT NULL DEFAULT 1,
   for_sale INTEGER NOT NULL DEFAULT 0,
   sale_price INTEGER,
+  sold INTEGER NOT NULL DEFAULT 0,
+  sold_at INTEGER,
   delivery TEXT NOT NULL DEFAULT 'pickup',
   shipping_price INTEGER NOT NULL DEFAULT 0,
   replacement_value INTEGER NOT NULL DEFAULT 0,
   tradeable INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS purchases (
+  id TEXT PRIMARY KEY,
+  item_id TEXT NOT NULL,
+  buyer_name TEXT NOT NULL,
+  seller_name TEXT NOT NULL,
+  price INTEGER NOT NULL,
+  ship_cost INTEGER NOT NULL DEFAULT 0,
+  delivery TEXT,
+  purchased_at INTEGER NOT NULL,
+  stripe_checkout_session_id TEXT,
+  stripe_payment_intent_id TEXT,
+  application_fee_amount INTEGER NOT NULL DEFAULT 0
+);
+-- Unikt index gör det FYSISKT OMÖJLIGT att köpa samma titel två gånger,
+-- exakt samma skydd som dubbelbokningsindexet för uthyrningar.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_one_purchase_per_item ON purchases(item_id);
 
 CREATE TABLE IF NOT EXISTS rentals (
   id TEXT PRIMARY KEY,

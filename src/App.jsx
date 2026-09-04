@@ -32,6 +32,7 @@ function useRewindrData() {
   const [listings, setListings] = useState([]);
   const [name, setName] = useState("");
   const [rentals, setRentals] = useState([]);
+  const [purchases, setPurchases] = useState([]);
   const [threads, setThreads] = useState([]);
   const [accounts, setAccounts] = useState({}); // { username: { verified, isAdmin } }
   const [reviews, setReviews] = useState([]);
@@ -46,10 +47,10 @@ function useRewindrData() {
 
   const refreshAll = useCallback(async () => {
     try {
-      const [l, r, t, rv, u] = await Promise.all([
-        api.listings(), api.rentals(), api.threads(), api.reviews(), api.users(),
+      const [l, r, p, t, rv, u] = await Promise.all([
+        api.listings(), api.rentals(), api.purchases(), api.threads(), api.reviews(), api.users(),
       ]);
-      setListings(l); setRentals(r); setThreads(t); setReviews(rv);
+      setListings(l); setRentals(r); setPurchases(p); setThreads(t); setReviews(rv);
       setAccounts(buildAccountsMap(u));
     } catch (e) {
       setLastError("Kunde inte hämta data från servern: " + (e?.message || e));
@@ -78,7 +79,7 @@ function useRewindrData() {
   }, [refreshAll]);
 
   return {
-    listings, name, setName, rentals, threads, accounts, setAccounts, reviews,
+    listings, name, setName, rentals, purchases, threads, accounts, setAccounts, reviews,
     ready, lastError, setLastError, refreshAll,
   };
 }
@@ -555,6 +556,11 @@ function Cassette({ item, onOpen }) {
         ) : (
           <Icon size={34} style={{ color }} className="group-hover:scale-110 transition-transform" />
         )}
+        {item.sold && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: "rgba(10,6,18,0.7)" }}>
+            <span className="px-3 py-1 rounded-full text-xs" style={{ ...fontDisplay, background: "#3a2a55", color: "#f3eefc" }}>SÅLD</span>
+          </div>
+        )}
       </div>
       <div className="p-3">
         <h3 className="text-base leading-tight" style={{ ...fontDisplay, color: "#f3eefc" }}>{item.title}</h3>
@@ -711,6 +717,79 @@ function RentFlow({ item, alreadyRented, activeRental, name, onConfirm }) {
   );
 }
 
+function BuyFlow({ item, alreadySold, name, onConfirm }) {
+  const [deliveryChoice, setDeliveryChoice] = useState(item.delivery === "ship" ? "ship" : "pickup");
+  const [expanded, setExpanded] = useState(false);
+
+  const shipCost = deliveryChoice === "ship" ? (item.shippingPrice || 0) : 0;
+  const total = item.salePrice + shipCost;
+
+  if (alreadySold) {
+    return (
+      <button disabled className="w-full py-2.5 rounded-lg text-sm opacity-50"
+        style={{ ...fontDisplay, fontSize: "16px", background: "#332a44", color: "#fff" }}>
+        SÅLD
+      </button>
+    );
+  }
+
+  if (!expanded) {
+    return (
+      <button onClick={() => setExpanded(true)}
+        className="w-full py-2.5 rounded-lg text-sm"
+        style={{ ...fontDisplay, fontSize: "16px", background: "#4ade80", color: "#0a0612" }}>
+        KÖP NU · {item.salePrice} KR
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-lg p-3 space-y-3" style={{ background: "#0a0612", border: "1px solid #4ade8044" }}>
+      {item.delivery === "both" && (
+        <div>
+          <div className="text-[11px] mb-1.5" style={{ color: "#8a7aa8", ...fontBody }}>Hur vill du få den?</div>
+          <div className="flex gap-2">
+            <button onClick={() => setDeliveryChoice("pickup")}
+              className="flex-1 py-2 rounded-md text-xs flex items-center justify-center gap-1.5"
+              style={{ background: deliveryChoice === "pickup" ? "#4ade8022" : "transparent", border: `1px solid ${deliveryChoice === "pickup" ? "#4ade80" : "#3a2a55"}`, color: deliveryChoice === "pickup" ? "#4ade80" : "#8a7aa8" }}>
+              <Home size={13} /> Hämta (gratis)
+            </button>
+            <button onClick={() => setDeliveryChoice("ship")}
+              className="flex-1 py-2 rounded-md text-xs flex items-center justify-center gap-1.5"
+              style={{ background: deliveryChoice === "ship" ? "#4ade8022" : "transparent", border: `1px solid ${deliveryChoice === "ship" ? "#4ade80" : "#3a2a55"}`, color: deliveryChoice === "ship" ? "#4ade80" : "#8a7aa8" }}>
+              <Truck size={13} /> Skicka (+{item.shippingPrice} kr)
+            </button>
+          </div>
+        </div>
+      )}
+      {item.delivery !== "both" && (
+        <div className="text-xs flex items-center gap-1.5" style={{ color: "#8a7aa8", ...fontBody }}>
+          {item.delivery === "ship" ? <Truck size={13} /> : <Home size={13} />}
+          {item.delivery === "ship" ? `Skickas (+${item.shippingPrice} kr)` : "Hämtas hos säljaren"}
+        </div>
+      )}
+      <div className="text-xs space-y-1" style={fontBody}>
+        <div className="flex justify-between" style={{ color: "#c9b8e0" }}>
+          <span>Pris</span><span>{item.salePrice} kr</span>
+        </div>
+        {shipCost > 0 && (
+          <div className="flex justify-between" style={{ color: "#c9b8e0" }}>
+            <span>Frakt</span><span>{shipCost} kr</span>
+          </div>
+        )}
+        <div className="flex justify-between pt-1 border-t" style={{ borderColor: "#3a2a55", color: "#f3eefc" }}>
+          <span>Att betala nu</span><span style={{ color: "#4ade80" }}>{total} kr</span>
+        </div>
+      </div>
+      <button onClick={() => onConfirm(deliveryChoice, shipCost)}
+        className="w-full py-2 rounded-md text-sm"
+        style={{ ...fontDisplay, fontSize: "15px", background: "#4ade80", color: "#0a0612" }}>
+        BEKRÄFTA KÖP · {total} KR
+      </button>
+    </div>
+  );
+}
+
 function TradeFlow({ item, myItems, onPropose }) {
   const [open, setOpen] = useState(false);
   const [offeredId, setOfferedId] = useState(myItems[0]?.id || "");
@@ -784,7 +863,7 @@ function TradeFlow({ item, myItems, onPropose }) {
   );
 }
 
-function ItemModal({ item, onClose, onRent, onRemove, alreadyRented, activeRental, onReturnRental, isOwner, name, threads, onStartThread, onReply, myItems, onProposeTrade, reviews, onAddReview, accounts }) {
+function ItemModal({ item, onClose, onRent, onPurchase, onRemove, alreadyRented, activeRental, onReturnRental, isOwner, name, threads, onStartThread, onReply, myItems, onProposeTrade, reviews, onAddReview, accounts }) {
   const [askOpen, setAskOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [openThreadId, setOpenThreadId] = useState(null);
@@ -905,6 +984,9 @@ function ItemModal({ item, onClose, onRent, onRemove, alreadyRented, activeRenta
               {item.rentable && (
                 <RentFlow item={item} alreadyRented={alreadyRented} activeRental={activeRental} name={name} onConfirm={(delivery, shipCost, days, rentCost) => onRent(item, delivery, shipCost, days, rentCost)} />
               )}
+              {item.forSale && item.salePrice && (
+                <BuyFlow item={item} alreadySold={item.sold} name={name} onConfirm={(delivery, shipCost) => onPurchase(item, delivery, shipCost)} />
+              )}
 
               {myThread ? (
                 <div>
@@ -917,7 +999,7 @@ function ItemModal({ item, onClose, onRent, onRemove, alreadyRented, activeRenta
                 </div>
               ) : (
                 <>
-                  {!askOpen && (
+                  {!askOpen && !(item.forSale && item.salePrice) && (
                     <button onClick={() => setAskOpen(true)}
                       className="w-full py-2.5 rounded-lg text-sm flex items-center justify-center gap-2"
                       style={{ ...fontDisplay, fontSize: "15px", background: "transparent", border: "1px solid #4ade8066", color: "#4ade80" }}>
@@ -1214,6 +1296,52 @@ function MyRentals({ rentals, listings, name, onReturn }) {
   );
 }
 
+// mode: "buyer" (visar mina köp) eller "seller" (visar mina sålda)
+function MyPurchases({ purchases, listings, name, mode }) {
+  const mine = purchases.filter((p) => (mode === "buyer" ? p.buyerName : p.sellerName) === name);
+  const items = mine
+    .map((p) => ({ ...listings.find((l) => l.id === p.itemId), purchase: p }))
+    .filter((i) => i.id || i.purchase); // titeln kan vara borttagen, visa ändå köpet
+
+  if (items.length === 0) {
+    return (
+      <div className="text-center py-10" style={{ ...fontBody, color: "#6d5d8a" }}>
+        {mode === "buyer" ? "Inga köp än." : "Inget sålt än."}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl">
+      {items.map((item) => {
+        const p = item.purchase;
+        const color = GENRE_COLORS[item.genre] || "#4ade80";
+        const total = p.price + (p.shipCost || 0);
+        return (
+          <div key={p.id} className="rounded-xl border p-4 flex items-center gap-3" style={{ borderColor: color + "44", background: "#140b22" }}>
+            {React.createElement(iconFor(item.type || "movie"), { size: 22, style: { color } })}
+            <div className="flex-1" style={fontBody}>
+              <div className="text-sm" style={{ color: "#f3eefc" }}>{item.title || "(borttagen titel)"}</div>
+              <div className="text-[11px] flex items-center gap-2 mt-0.5 flex-wrap" style={{ color: "#8a7aa8" }}>
+                <span className="flex items-center gap-1"><Clock size={12} /> {new Date(p.purchasedAt).toLocaleDateString("sv-SE")}</span>
+                <span className="flex items-center gap-1">
+                  {p.delivery === "ship" ? <Truck size={11} /> : <Home size={11} />}
+                  {p.delivery === "ship" ? "Skickas" : "Hämtas"}
+                </span>
+                <span>{mode === "buyer" ? `från ${p.sellerName}` : `till ${p.buyerName}`}</span>
+              </div>
+            </div>
+            <div className="text-xs text-right" style={{ color: "#4ade80" }}>
+              {total} kr
+              {p.shipCost > 0 && <div className="text-[10px]" style={{ color: "#6d5d8a" }}>varav {p.shipCost} kr frakt</div>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ---------- info pages ----------
 const ABOUT_TEXT = `Kommer du också ihåg känslan?
 
@@ -1399,19 +1527,26 @@ class ErrorBoundary extends React.Component {
 }
 
 function RewindrAppInner() {
-  const { listings, name, setName, rentals, threads, accounts, reviews, ready, lastError, setLastError, refreshAll } = useRewindrData();
+  const { listings, name, setName, rentals, purchases, threads, accounts, reviews, ready, lastError, setLastError, refreshAll } = useRewindrData();
   const [tab, setTab] = useState("browse");
   const [filter, setFilter] = useState("all");
+  const [offerFilter, setOfferFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [openItem, setOpenItem] = useState(null);
   const [adminAccounts, setAdminAccounts] = useState({});
   const [infoPage, setInfoPage] = useState(null);
 
   const filtered = listings.filter((i) => {
+    if (i.sold) return false; // sålda titlar försvinner permanent från Bläddra
     const typeOk = filter === "all" || i.type === filter;
+    const offerOk =
+      offerFilter === "all" ||
+      (offerFilter === "rent" && i.rentable) ||
+      (offerFilter === "buy" && i.forSale) ||
+      (offerFilter === "trade" && i.tradeable);
     const q = query.trim().toLowerCase();
     const queryOk = !q || i.title.toLowerCase().includes(q) || i.genre.toLowerCase().includes(q);
-    return typeOk && queryOk;
+    return typeOk && offerOk && queryOk;
   });
 
   const isAdmin = name && accounts[name]?.isAdmin;
@@ -1437,6 +1572,11 @@ function RewindrAppInner() {
 
   const handleRent = withErrorHandling(async (item, delivery, shipCost, days) => {
     const data = await api.createRental(item.id, days, delivery);
+    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+  });
+
+  const handlePurchase = withErrorHandling(async (item, delivery) => {
+    const data = await api.createPurchase(item.id, delivery);
     if (data.checkoutUrl) window.location.href = data.checkoutUrl;
   });
 
@@ -1510,7 +1650,7 @@ function RewindrAppInner() {
           <>
             {tab === "browse" && (
               <div>
-                <div className="flex gap-2 mb-5" style={fontBody}>
+                <div className="flex gap-2 mb-3 flex-wrap" style={fontBody}>
                   {[["all", "Allt"], ["movie", "Filmer"], ["game", "TV-spel"]].map(([id, label]) => (
                     <button key={id} onClick={() => setFilter(id)}
                       className="px-3 py-1.5 rounded-full text-xs border"
@@ -1518,6 +1658,19 @@ function RewindrAppInner() {
                         borderColor: filter === id ? "#ff2fb0" : "#3a2a55",
                         color: filter === id ? "#ff2fb0" : "#8a7aa8",
                         background: filter === id ? "#ff2fb01a" : "transparent",
+                      }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2 mb-5 flex-wrap" style={fontBody}>
+                  {[["all", "Alla erbjudanden"], ["rent", "Hyra"], ["buy", "Köp"], ["trade", "Byt"]].map(([id, label]) => (
+                    <button key={id} onClick={() => setOfferFilter(id)}
+                      className="px-3 py-1.5 rounded-full text-xs border"
+                      style={{
+                        borderColor: offerFilter === id ? "#21e6ec" : "#3a2a55",
+                        color: offerFilter === id ? "#21e6ec" : "#8a7aa8",
+                        background: offerFilter === id ? "#21e6ec1a" : "transparent",
                       }}>
                       {label}
                     </button>
@@ -1553,7 +1706,22 @@ function RewindrAppInner() {
                 <div className="text-xs rounded-lg p-4 max-w-sm" style={{ background: "#21e6ec15", color: "#c9b8e0", ...fontBody }}>Logga in högst upp för att se dina annonser.</div>
               )
             )}
-            {tab === "mine" && <MyRentals rentals={rentals} listings={listings} name={name} onReturn={handleReturnRental} />}
+            {tab === "mine" && (
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-lg mb-3" style={{ ...fontDisplay, color: "#ffe94a" }}>Mina lån</h3>
+                  <MyRentals rentals={rentals} listings={listings} name={name} onReturn={handleReturnRental} />
+                </div>
+                <div>
+                  <h3 className="text-lg mb-3" style={{ ...fontDisplay, color: "#4ade80" }}>Mina köp</h3>
+                  <MyPurchases purchases={purchases} listings={listings} name={name} mode="buyer" />
+                </div>
+                <div>
+                  <h3 className="text-lg mb-3" style={{ ...fontDisplay, color: "#4ade80" }}>Mina sålda</h3>
+                  <MyPurchases purchases={purchases} listings={listings} name={name} mode="seller" />
+                </div>
+              </div>
+            )}
             {tab === "admin" && isAdmin && (
               <AdminPanel
                 listings={listings}
@@ -1574,6 +1742,7 @@ function RewindrAppInner() {
         item={openItem}
         onClose={() => setOpenItem(null)}
         onRent={handleRent}
+        onPurchase={handlePurchase}
         onRemove={handleRemove}
         alreadyRented={openItem ? isRented(openItem) : false}
         activeRental={openItem ? activeRentalFor(openItem) : null}

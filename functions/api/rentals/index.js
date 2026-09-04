@@ -58,6 +58,7 @@ export async function onRequestPost({ request, env }) {
         transfer_data: { destination: owner.stripe_account_id },
       },
       metadata: {
+        kind: "rental",
         itemId: listing.id,
         renterUsername: user.username,
         ownerUsername: listing.owner,
