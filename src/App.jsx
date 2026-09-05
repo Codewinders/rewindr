@@ -2062,7 +2062,7 @@ function RewindrAppInner() {
         onRent={handleRent}
         onPurchase={handlePurchase}
         onEdit={(item) => { setEditingItem(item); setOpenItem(null); setTab("list"); }}
-        onOpenProfile={setViewingProfile}
+        onOpenProfile={(username) => { setOpenItem(null); setViewingProfile(username); }}
         onRemove={handleRemove}
         alreadyRented={openItem ? isRented(openItem) : false}
         activeRental={openItem ? activeRentalFor(openItem) : null}
