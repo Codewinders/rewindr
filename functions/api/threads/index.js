@@ -1,16 +1,5 @@
-import { json, readJson, makeId, getSessionUser } from "../../../lib/db.js";
+import { json, readJson, makeId, getSessionUser, fullThread } from "../../../lib/db.js";
 import { sendEmail, messageEmail } from "../../../lib/email.js";
-
-async function fullThread(env, id) {
-  const t = await env.DB.prepare("SELECT * FROM threads WHERE id = ?").bind(id).first();
-  const { results } = await env.DB.prepare("SELECT * FROM messages WHERE thread_id = ? ORDER BY at ASC").bind(id).all();
-  return {
-    id: t.id, kind: t.kind, itemId: t.item_id, itemTitle: t.item_title, owner: t.owner,
-    buyerName: t.buyer_name, offeredItemId: t.offered_item_id, offeredItemTitle: t.offered_item_title,
-    tradeType: t.trade_type, tradeDays: t.trade_days,
-    messages: results.map((m) => ({ from: m.from_name, text: m.text, at: m.at })),
-  };
-}
 
 export async function onRequestGet({ env }) {
   const { results } = await env.DB.prepare("SELECT id FROM threads ORDER BY created_at DESC").all();
@@ -30,8 +19,8 @@ export async function onRequestPost({ request, env }) {
   const id = makeId("thread");
   await env.DB.prepare(
     `INSERT INTO threads
-     (id, kind, item_id, item_title, owner, buyer_name, offered_item_id, offered_item_title, trade_type, trade_days, created_at)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?)`
+     (id, kind, item_id, item_title, owner, buyer_name, offered_item_id, offered_item_title, trade_type, trade_days, status, created_at)
+     VALUES (?,?,?,?,?,?,?,?,?,?,'pending',?)`
   ).bind(
     id, b.kind === "trade" ? "trade" : "buy", b.itemId, listing.title, listing.owner, user.username,
     b.offeredItemId || null, b.offeredItemTitle || null, b.tradeType || null, b.tradeDays || null, Date.now()

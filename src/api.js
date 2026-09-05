@@ -91,6 +91,9 @@ export const api = {
   threads: () => request("GET", "/api/threads"),
   createThread: (payload) => request("POST", "/api/threads", payload),
   replyThread: (id, text) => request("POST", `/api/threads/${id}/messages`, { text }),
+  approveTrade: (id) => request("POST", `/api/threads/${id}/approve`),
+  rejectTrade: (id) => request("POST", `/api/threads/${id}/reject`),
+  completeTrade: (id) => request("POST", `/api/threads/${id}/complete`),
 
   // reviews
   reviews: () => request("GET", "/api/reviews"),

@@ -95,6 +95,9 @@ CREATE TABLE IF NOT EXISTS threads (
   offered_item_title TEXT,
   trade_type TEXT,
   trade_days INTEGER,
+  status TEXT NOT NULL DEFAULT 'pending',
+  owner_confirmed INTEGER NOT NULL DEFAULT 0,
+  buyer_confirmed INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL
 );
 

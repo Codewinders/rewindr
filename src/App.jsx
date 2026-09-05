@@ -656,6 +656,60 @@ function Cassette({ item, onOpen, isFavorite, onToggleFavorite }) {
   );
 }
 
+// Visar bytets status och rätt knappar beroende på om man är ägare eller
+// den som föreslog bytet — allt spårbart i appen, ingen fri text krävs
+// för att gå vidare i processen.
+function TradeStatusBar({ thread, myName, onApprove, onReject, onComplete }) {
+  const isOwner = thread.owner === myName;
+  const isBuyer = thread.buyerName === myName;
+  const myConfirmed = isOwner ? thread.ownerConfirmed : thread.buyerConfirmed;
+  const otherConfirmed = isOwner ? thread.buyerConfirmed : thread.ownerConfirmed;
+
+  const statusLabel = {
+    pending: "Väntar på svar",
+    approved: "Godkänt — väntar på att bytet genomförs",
+    rejected: "Nekat",
+    completed: "Bytet genomfört ✓",
+  }[thread.status];
+
+  const statusColor = { pending: "#ffe94a", approved: "#21e6ec", rejected: "#ff8a8a", completed: "#4ade80" }[thread.status];
+
+  return (
+    <div className="rounded-lg p-3 mb-2 text-xs" style={{ background: statusColor + "15", border: `1px solid ${statusColor}44`, ...fontBody }}>
+      <div className="flex items-center justify-between mb-1">
+        <span style={{ color: statusColor }}>{statusLabel}</span>
+      </div>
+
+      {thread.status === "pending" && isOwner && (
+        <div className="flex gap-2 mt-2">
+          <button onClick={() => onApprove(thread.id)} className="flex-1 py-1.5 rounded-md" style={{ background: "#4ade80", color: "#121214", ...fontDisplay, fontSize: "13px" }}>
+            GODKÄNN
+          </button>
+          <button onClick={() => onReject(thread.id)} className="flex-1 py-1.5 rounded-md" style={{ background: "#33333a", color: "#ff8a8a", ...fontDisplay, fontSize: "13px" }}>
+            NEKA
+          </button>
+        </div>
+      )}
+      {thread.status === "pending" && !isOwner && (
+        <p style={{ color: "#8a7aa8" }}>Väntar på att ägaren godkänner eller nekar bytet.</p>
+      )}
+
+      {thread.status === "approved" && (isOwner || isBuyer) && (
+        myConfirmed ? (
+          <p style={{ color: "#8a7aa8" }}>Du har markerat bytet som genomfört. Väntar på {isOwner ? thread.buyerName : thread.owner}.</p>
+        ) : (
+          <button onClick={() => onComplete(thread.id)} className="w-full py-1.5 rounded-md mt-1" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay, fontSize: "13px" }}>
+            MARKERA SOM GENOMFÖRT
+          </button>
+        )
+      )}
+      {thread.status === "completed" && (
+        <p style={{ color: "#8a7aa8" }}>Bekräftat av båda parter. Ni kan nu lämna recensioner till varandra.</p>
+      )}
+    </div>
+  );
+}
+
 function ChatThread({ thread, myName, onReply }) {
   const [text, setText] = useState("");
   const inputStyle = { background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody };
@@ -936,7 +990,7 @@ function TradeFlow({ item, myItems, onPropose }) {
   );
 }
 
-function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpenProfile, alreadyRented, activeRental, onReturnRental, isOwner, name, threads, onStartThread, onReply, myItems, onProposeTrade, reviews, onAddReview, accounts }) {
+function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpenProfile, alreadyRented, activeRental, onReturnRental, isOwner, name, threads, onStartThread, onReply, onApproveTrade, onRejectTrade, onCompleteTrade, myItems, onProposeTrade, reviews, onAddReview, accounts }) {
   const [askOpen, setAskOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [openThreadId, setOpenThreadId] = useState(null);
@@ -1047,6 +1101,9 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpen
                         </button>
                         {openThreadId === t.id && (
                           <div className="mt-2">
+                            {t.kind === "trade" && (
+                              <TradeStatusBar thread={t} myName={item.owner} onApprove={onApproveTrade} onReject={onRejectTrade} onComplete={onCompleteTrade} />
+                            )}
                             <ChatThread thread={t} myName={item.owner} onReply={onReply} />
                           </div>
                         )}
@@ -1076,6 +1133,9 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpen
                     Din konversation med {item.owner}
                     {myThread.kind === "trade" && ` — bytesförslag: ${myThread.offeredItemTitle} (${myThread.tradeType === "permanent" ? "permanent" : myThread.tradeDays + " dagar"})`}
                   </div>
+                  {myThread.kind === "trade" && (
+                    <TradeStatusBar thread={myThread} myName={name} onApprove={onApproveTrade} onReject={onRejectTrade} onComplete={onCompleteTrade} />
+                  )}
                   <ChatThread thread={myThread} myName={name} onReply={onReply} />
                 </div>
               ) : (
@@ -1495,7 +1555,7 @@ const FAQ_ITEMS = [
   { q: "Var är Rewindr tillgängligt?", a: "Rewindr fungerar i hela Sverige, men vi växer stad för stad — så utbudet kan variera beroende på var du bor." },
 ];
 
-function ProfileModal({ username, onClose, listings, rentals, purchases, reviews, accounts, favorites, onToggleFavorite, onOpenItem }) {
+function ProfilePage({ username, onBack, listings, rentals, purchases, reviews, accounts, favorites, onToggleFavorite, onOpenItem }) {
   const [profileFilter, setProfileFilter] = useState("all");
   if (!username) return null;
 
@@ -1511,75 +1571,76 @@ function ProfileModal({ username, onClose, listings, rentals, purchases, reviews
   const badges = computeBadges(username, { rentals, purchases, reviews, accounts });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(5,2,12,0.85)" }} onClick={onClose}>
-      <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border p-6" style={{ borderColor: "#33333a", background: "#1c1c20" }} onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <div className="flex items-center gap-2 text-2xl" style={{ ...fontDisplay, color: "#f3eefc" }}>
-              <User size={22} style={{ color: "#21e6ec" }} />
-              {username}
-              {acc?.verified && <ShieldCheck size={18} style={{ color: "#4ade80" }} />}
-              {acc?.isAdmin && <Crown size={18} style={{ color: "#ffe94a" }} />}
-            </div>
-            <div className="flex items-center gap-2 text-xs mt-1" style={{ color: "#8a7aa8", ...fontBody }}>
-              <StarRow value={Math.round(avg)} size={13} />
-              {theirReviews.length > 0 ? `${avg.toFixed(1)} (${theirReviews.length} recensioner)` : "Inga recensioner än"}
-            </div>
+    <div>
+      <button onClick={onBack} className="flex items-center gap-1.5 text-xs mb-4" style={{ color: "#8a7aa8", ...fontBody }}>
+        ← Tillbaka
+      </button>
+
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <div className="flex items-center gap-2 text-3xl" style={{ ...fontDisplay, color: "#f3eefc" }}>
+            <User size={26} style={{ color: "#21e6ec" }} />
+            {username}
+            {acc?.verified && <ShieldCheck size={20} style={{ color: "#4ade80" }} />}
+            {acc?.isAdmin && <Crown size={20} style={{ color: "#ffe94a" }} />}
           </div>
-          <button onClick={onClose} style={{ color: "#8a7aa8" }}><X size={20} /></button>
+          <div className="flex items-center gap-2 text-xs mt-1" style={{ color: "#8a7aa8", ...fontBody }}>
+            <StarRow value={Math.round(avg)} size={13} />
+            {theirReviews.length > 0 ? `${avg.toFixed(1)} (${theirReviews.length} recensioner)` : "Inga recensioner än"}
+          </div>
         </div>
+      </div>
 
-        {badges.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-5">
-            {badges.map((b) => (
-              <span key={b.label} className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full" style={{ background: b.color + "1a", color: b.color, ...fontBody }}>
-                <Award size={11} /> {b.label}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div className="flex gap-2 mb-4 flex-wrap" style={fontBody}>
-          {[["all", "Alla"], ["rent", "Hyra"], ["buy", "Köp"], ["trade", "Byt"]].map(([id, label]) => (
-            <button key={id} onClick={() => setProfileFilter(id)}
-              className="px-3 py-1.5 rounded-full text-xs border"
-              style={{
-                borderColor: profileFilter === id ? "#21e6ec" : "#33333a",
-                color: profileFilter === id ? "#21e6ec" : "#8a7aa8",
-                background: profileFilter === id ? "#21e6ec1a" : "transparent",
-              }}>
-              {label}
-            </button>
+      {badges.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          {badges.map((b) => (
+            <span key={b.label} className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full" style={{ background: b.color + "1a", color: b.color, ...fontBody }}>
+              <Award size={11} /> {b.label}
+            </span>
           ))}
         </div>
+      )}
 
-        {theirItems.length === 0 ? (
-          <div className="text-center py-8 text-xs" style={{ color: "#6d5d8a", ...fontBody }}>Inga annonser i den här kategorin.</div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-            {theirItems.map((item) => (
-              <Cassette key={item.id} item={item} onOpen={onOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={onToggleFavorite} />
+      <div className="flex gap-2 mb-4 flex-wrap" style={fontBody}>
+        {[["all", "Alla"], ["rent", "Hyra"], ["buy", "Köp"], ["trade", "Byt"]].map(([id, label]) => (
+          <button key={id} onClick={() => setProfileFilter(id)}
+            className="px-3 py-1.5 rounded-full text-xs border"
+            style={{
+              borderColor: profileFilter === id ? "#21e6ec" : "#33333a",
+              color: profileFilter === id ? "#21e6ec" : "#8a7aa8",
+              background: profileFilter === id ? "#21e6ec1a" : "transparent",
+            }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {theirItems.length === 0 ? (
+        <div className="text-center py-8 text-xs" style={{ color: "#6d5d8a", ...fontBody }}>Inga annonser i den här kategorin.</div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+          {theirItems.map((item) => (
+            <Cassette key={item.id} item={item} onOpen={onOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={onToggleFavorite} />
+          ))}
+        </div>
+      )}
+
+      {theirReviews.length > 0 && (
+        <div className="border-t pt-4 max-w-2xl" style={{ borderColor: "#33333a" }}>
+          <div className="text-sm mb-2" style={{ ...fontDisplay, fontSize: "14px", color: "#ffe94a" }}>RECENSIONER</div>
+          <div className="space-y-1.5">
+            {theirReviews.slice().reverse().map((r) => (
+              <div key={r.id} className="text-xs rounded-md p-2" style={{ background: "#121214", ...fontBody }}>
+                <div className="flex items-center justify-between">
+                  <span style={{ color: "#f3eefc" }}>{r.reviewerUsername}</span>
+                  <StarRow value={r.rating} size={10} />
+                </div>
+                <div style={{ color: "#8a7aa8" }}>{r.text}</div>
+              </div>
             ))}
           </div>
-        )}
-
-        {theirReviews.length > 0 && (
-          <div className="border-t pt-4" style={{ borderColor: "#33333a" }}>
-            <div className="text-sm mb-2" style={{ ...fontDisplay, fontSize: "14px", color: "#ffe94a" }}>RECENSIONER</div>
-            <div className="space-y-1.5">
-              {theirReviews.slice().reverse().map((r) => (
-                <div key={r.id} className="text-xs rounded-md p-2" style={{ background: "#121214", ...fontBody }}>
-                  <div className="flex items-center justify-between">
-                    <span style={{ color: "#f3eefc" }}>{r.reviewerUsername}</span>
-                    <StarRow value={r.rating} size={10} />
-                  </div>
-                  <div style={{ color: "#8a7aa8" }}>{r.text}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1807,6 +1868,16 @@ function RewindrAppInner() {
     await api.replyThread(threadId, text);
   });
 
+  const handleApproveTrade = withErrorHandling(async (threadId) => {
+    await api.approveTrade(threadId);
+  });
+  const handleRejectTrade = withErrorHandling(async (threadId) => {
+    await api.rejectTrade(threadId);
+  });
+  const handleCompleteTrade = withErrorHandling(async (threadId) => {
+    await api.completeTrade(threadId);
+  });
+
   const handleAddReview = withErrorHandling(async (review) => {
     await api.createReview(review.ownerUsername, review.rating, review.text);
   });
@@ -1845,10 +1916,23 @@ function RewindrAppInner() {
         )}
         <AuthPanel name={name} accounts={accounts} onAuthChange={handleAuthChange} />
         <Marquee query={query} setQuery={setQuery} />
-        <Tabs active={tab} setActive={(id) => { setEditingItem(null); setTab(id); }} showAdmin={isAdmin} showMyListings={!!name} />
+        <Tabs active={tab} setActive={(id) => { setEditingItem(null); setViewingProfile(null); setTab(id); }} showAdmin={isAdmin} showMyListings={!!name} />
 
         {!ready ? (
           <div className="text-center py-16" style={{ color: "#6d5d8a", ...fontBody }}>Spolar upp hyllan…</div>
+        ) : viewingProfile ? (
+          <ProfilePage
+            username={viewingProfile}
+            onBack={() => setViewingProfile(null)}
+            listings={listings}
+            rentals={rentals}
+            purchases={purchases}
+            reviews={reviews}
+            accounts={accounts}
+            favorites={favorites}
+            onToggleFavorite={name ? toggleFavorite : undefined}
+            onOpenItem={(item) => { setViewingProfile(null); setOpenItem(item); }}
+          />
         ) : (
           <>
             {tab === "browse" && (
@@ -1990,21 +2074,12 @@ function RewindrAppInner() {
         onProposeTrade={handleProposeTrade}
         onStartThread={handleStartThread}
         onReply={handleReply}
+        onApproveTrade={handleApproveTrade}
+        onRejectTrade={handleRejectTrade}
+        onCompleteTrade={handleCompleteTrade}
         reviews={reviews}
         onAddReview={handleAddReview}
         accounts={accounts}
-      />
-      <ProfileModal
-        username={viewingProfile}
-        onClose={() => setViewingProfile(null)}
-        listings={listings}
-        rentals={rentals}
-        purchases={purchases}
-        reviews={reviews}
-        accounts={accounts}
-        favorites={favorites}
-        onToggleFavorite={name ? toggleFavorite : undefined}
-        onOpenItem={(item) => { setViewingProfile(null); setOpenItem(item); }}
       />
       <Footer onOpenInfo={setInfoPage} />
       <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />
