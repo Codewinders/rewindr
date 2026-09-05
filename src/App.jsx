@@ -800,6 +800,12 @@ function ShelfSpine({ item, onOpen, isFavorite, onToggleFavorite }) {
               className="absolute top-2 right-2 rounded-full p-1.5" style={{ background: "rgba(10,6,18,0.75)" }} title="Visa info">
               <MoreVertical size={14} style={{ color: "#fff" }} />
             </button>
+            {item.format && (
+              <span className="absolute top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] whitespace-nowrap"
+                style={{ ...fontDisplay, background: "rgba(10,6,18,0.8)", color, border: `1px solid ${color}66` }}>
+                {item.format}
+              </span>
+            )}
             <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 text-[10px] truncate" style={{ background: "rgba(10,6,18,0.75)", color: "#f3eefc", ...fontBody }}>
               {item.title}
             </div>
@@ -820,6 +826,26 @@ function ShelfSpine({ item, onOpen, isFavorite, onToggleFavorite }) {
 
 // Hela hyllan — täta ryggar som står på en hyllkant, precis som i en
 // riktig videobutik. Radbryter naturligt om man har många titlar.
+function ShelfRow({ label, items, onOpen, favorites, onToggleFavorite }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mb-6 last:mb-0">
+      <div className="flex items-center gap-2 mb-2 px-1">
+        <div className="h-px flex-1" style={{ background: "#ffffff12" }} />
+        <span className="text-[11px] uppercase tracking-[0.15em]" style={{ ...fontDisplay, color: "#e8b45c" }}>{label}</span>
+        <div className="h-px flex-1" style={{ background: "#ffffff12" }} />
+      </div>
+      <div className="flex items-end gap-[3px] flex-wrap pb-0 px-1">
+        {items.map((item) => (
+          <ShelfSpine key={item.id} item={item} onOpen={onOpen} isFavorite={favorites.includes(item.id)} onToggleFavorite={onToggleFavorite} />
+        ))}
+      </div>
+      {/* Hyllplanet */}
+      <div className="h-4 mt-0 rounded-b-md" style={{ background: "linear-gradient(180deg, #4a3220, #241608)", boxShadow: "0 6px 12px rgba(0,0,0,0.5)" }} />
+    </div>
+  );
+}
+
 function Shelf({ items, onOpen, favorites, onToggleFavorite }) {
   if (items.length === 0) {
     return (
@@ -829,16 +855,25 @@ function Shelf({ items, onOpen, favorites, onToggleFavorite }) {
       </div>
     );
   }
+
+  const movies = items.filter((i) => i.type !== "game");
+  const games = items.filter((i) => i.type === "game");
+
   return (
-    <div className="rounded-xl p-6 pb-0 overflow-x-auto" style={{ background: "linear-gradient(180deg, #1c1c20 0%, #16161a 100%)", border: "1px solid #33333a" }}>
-      <div className="flex items-end gap-[3px] flex-wrap pb-0">
-        {items.map((item) => (
-          <ShelfSpine key={item.id} item={item} onOpen={onOpen} isFavorite={favorites.includes(item.id)} onToggleFavorite={onToggleFavorite} />
-        ))}
+    <div className="rounded-xl p-6 pt-8 overflow-x-auto relative" style={{
+      background: "radial-gradient(ellipse at 50% 0%, #3a2a1a55 0%, #241a12 45%, #17110c 100%)",
+      border: "1px solid #4a3220",
+      boxShadow: "inset 0 0 60px rgba(0,0,0,0.4)",
+    }}>
+      {/* Varmt ljussken uppifrån — som en lampa i ett vardagsrum */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none" style={{ width: 320, height: 160, background: "radial-gradient(ellipse, #ffb02a22 0%, transparent 70%)" }} />
+
+      <div className="relative">
+        <ShelfRow label="Filmer" items={movies} onOpen={onOpen} favorites={favorites} onToggleFavorite={onToggleFavorite} />
+        <ShelfRow label="TV-spel" items={games} onOpen={onOpen} favorites={favorites} onToggleFavorite={onToggleFavorite} />
       </div>
-      {/* Hyllkanten */}
-      <div className="h-4 mt-0 rounded-b-md" style={{ background: "linear-gradient(180deg, #3a2a1a, #1c130a)", boxShadow: "0 6px 10px rgba(0,0,0,0.4)" }} />
-      <div className="h-6" />
+      <div className="h-2" />
+
     </div>
   );
 }
