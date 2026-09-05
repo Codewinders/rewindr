@@ -525,7 +525,7 @@ function AdminPanel({ listings, accounts, reviews, rentals, threads, onDeleteLis
   ];
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-2 mb-4" style={{ ...fontDisplay, color: "#ffe94a" }}>
         <Crown size={18} /> <h2 className="text-2xl">Adminpanel</h2>
       </div>
@@ -1308,7 +1308,7 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
   };
 
   return (
-    <div className="max-w-md space-y-4 rounded-2xl border p-5" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
+    <div className="max-w-md mx-auto space-y-4 rounded-2xl border p-5" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-2xl" style={{ ...fontDisplay, color: "#ffe94a" }}>{editingItem ? "Redigera titel" : "Lägg upp en titel"}</h2>
         {editingItem && (
@@ -1457,7 +1457,7 @@ function MyRentals({ rentals, listings, name, onReturn }) {
     );
   }
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
       {items.map((item) => {
         const r = item.rental;
         const color = GENRE_COLORS[item.genre] || "#21e6ec";
@@ -1546,7 +1546,7 @@ function WantedAdsPanel({ ads, name, onAdd, onDelete, onRespond }) {
   };
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl mx-auto">
       {name && (
         <div className="rounded-xl border p-4 mb-5 space-y-2" style={{ borderColor: "#33333a", background: "#1c1c20" }}>
           <h2 className="text-xl mb-1" style={{ ...fontDisplay, color: "#ffe94a" }}>Efterlys en titel</h2>
@@ -1585,7 +1585,7 @@ function MyPurchases({ purchases, listings, name, mode }) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
       {items.map((item) => {
         const p = item.purchase;
         const color = GENRE_COLORS[item.genre] || "#4ade80";
