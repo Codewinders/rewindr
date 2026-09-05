@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { api } from "./api.js";
-import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard, Disc, Heart, Award } from "lucide-react";
+import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard, Disc, Heart, Award, MoreVertical } from "lucide-react";
 
 const FORMATS = ["VHS", "DVD", "Blu-ray", "4K Blu-ray"];
 const FORMAT_PRICE_HINT = {
@@ -754,59 +754,61 @@ function ShelfSpine({ item, onOpen, isFavorite, onToggleFavorite }) {
   const Icon = iconFor(item.type);
   const FormatIcon = formatIcon(item);
 
-  const handleClick = () => {
-    if (pulled) { onOpen(item); return; }
-    setPulled(true);
-    setTimeout(() => onOpen(item), 420);
-  };
+  const toggle = () => setPulled((p) => !p);
 
   return (
     <div
-      onClick={handleClick} role="button" tabIndex={0}
-      onKeyDown={(e) => { if (e.key === "Enter") handleClick(); }}
+      onClick={toggle} role="button" tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter") toggle(); }}
       className="relative cursor-pointer shrink-0 group"
       style={{
-        width: pulled ? 128 : 34,
-        height: 168,
+        width: pulled ? 168 : 46,
+        height: 220,
         transition: "width 0.42s cubic-bezier(0.34, 1.2, 0.64, 1)",
-        transform: pulled ? "translateY(-10px)" : "translateY(0)",
+        transform: pulled ? "translateY(-14px)" : "translateY(0)",
         zIndex: pulled ? 20 : 1,
-        filter: pulled ? "drop-shadow(0 12px 14px rgba(0,0,0,0.5))" : "none",
+        filter: pulled ? "drop-shadow(0 14px 16px rgba(0,0,0,0.5))" : "none",
       }}>
       {/* Ryggens etikett — synlig hela tiden, tonas bort när utdragen */}
-      <div className="absolute inset-0 flex flex-col items-center justify-between py-3 overflow-hidden rounded-[2px]"
+      <div className="absolute inset-0 flex flex-col items-center justify-between py-4 overflow-hidden rounded-[2px]"
         style={{ background: color, opacity: pulled ? 0 : 1, transition: "opacity 0.25s" }}>
-        <FormatIcon size={12} style={{ color: "#121214" }} />
-        <span className="text-[9px] uppercase tracking-wider text-center px-0.5" style={{ ...fontDisplay, color: "#121214", writingMode: "vertical-rl" }}>
-          {item.title.length > 22 ? item.title.slice(0, 22) + "…" : item.title}
+        <FormatIcon size={15} style={{ color: "#121214" }} />
+        <span className="text-[10px] uppercase tracking-wider text-center px-0.5" style={{ ...fontDisplay, color: "#121214", writingMode: "vertical-rl" }}>
+          {item.title.length > 26 ? item.title.slice(0, 26) + "…" : item.title}
         </span>
-        <div className="w-3 h-3 rounded-full" style={{ background: "#12121466" }} />
+        <div className="w-3.5 h-3.5 rounded-full" style={{ background: "#12121466" }} />
       </div>
 
       {/* Omslaget — tonas fram när utdragen */}
       <div className="absolute inset-0 overflow-hidden rounded-[2px] flex items-center justify-center"
         style={{ background: `linear-gradient(135deg, ${color}33, #121214 85%)`, opacity: pulled ? 1 : 0, transition: "opacity 0.25s 0.15s" }}>
-        <div className="absolute left-0 top-0 bottom-0 w-1" style={{ background: color }} />
+        <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ background: color }} />
         {item.imageUrl ? (
           <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
         ) : (
-          <Icon size={30} style={{ color }} />
+          <Icon size={42} style={{ color }} />
         )}
         {onToggleFavorite && (
           <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id); }}
-            className="absolute top-1.5 left-1.5 rounded-full p-1" style={{ background: "rgba(10,6,18,0.75)" }}>
-            <Heart size={11} fill={isFavorite ? "#ff2fb0" : "none"} style={{ color: isFavorite ? "#ff2fb0" : "#fff" }} />
+            className="absolute top-2 left-2 rounded-full p-1.5" style={{ background: "rgba(10,6,18,0.75)" }}>
+            <Heart size={13} fill={isFavorite ? "#ff2fb0" : "none"} style={{ color: isFavorite ? "#ff2fb0" : "#fff" }} />
           </button>
         )}
         {pulled && (
-          <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1 text-[9px] truncate" style={{ background: "rgba(10,6,18,0.75)", color: "#f3eefc", ...fontBody }}>
-            {item.title}
-          </div>
+          <>
+            <button onClick={(e) => { e.stopPropagation(); onOpen(item); }}
+              className="absolute top-2 right-2 rounded-full p-1.5" style={{ background: "rgba(10,6,18,0.75)" }} title="Visa info">
+              <MoreVertical size={14} style={{ color: "#fff" }} />
+            </button>
+            <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 text-[10px] truncate" style={{ background: "rgba(10,6,18,0.75)", color: "#f3eefc", ...fontBody }}>
+              {item.title}
+            </div>
+          </>
         )}
       </div>
       {item.sold && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(10,6,18,0.7)" }}>
-          <span className="text-[9px]" style={{ ...fontDisplay, color: "#f3eefc" }}>SÅLD</span>
+          <span className="text-[10px]" style={{ ...fontDisplay, color: "#f3eefc" }}>SÅLD</span>
         </div>
       )}
       {!pulled && (
@@ -2150,7 +2152,7 @@ function RewindrAppInner() {
   const activeRentalFor = (item) => rentals.find((r) => r.itemId === item.id && !r.returned);
   const isRented = (item) => !!activeRentalFor(item);
   const isOwner = (item) => name && item.owner === name;
-  const myItems = listings.filter((l) => name && l.owner === name);
+  const myItems = listings.filter((l) => name && l.owner === name && !l.shelfOnly);
 
   const loadAdminAccounts = async () => {
     try {
