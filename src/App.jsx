@@ -1461,7 +1461,14 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
           {uploading ? "Laddar upp…" : imagePreview ? "Byt bild" : "Välj eller ta en bild"}
         </label>
         {imagePreview && (
-          <img src={imagePreview} alt="Förhandsvisning" className="mt-2 w-full h-32 object-cover rounded-md" />
+          <div className="mt-2 relative">
+            <img src={imagePreview} alt="Förhandsvisning" className="w-full h-32 object-cover rounded-md" />
+            <button type="button" onClick={() => { setImageUrl(null); setImagePreview(null); }}
+              className="absolute top-2 right-2 rounded-full p-1.5 flex items-center gap-1 text-[11px]"
+              style={{ background: "rgba(10,6,18,0.8)", color: "#ff8a8a" }}>
+              <X size={13} /> Ta bort bild
+            </button>
+          </div>
         )}
         {uploadError && <p className="text-[11px] mt-1" style={{ color: "#ff8a8a" }}>{uploadError}</p>}
       </div>
