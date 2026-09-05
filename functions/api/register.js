@@ -12,7 +12,7 @@ function makeSixDigitCode() {
 }
 
 export async function onRequestPost({ request, env }) {
-  const { username, email, password } = await readJson(request);
+  const { username, email, password, referralCode } = await readJson(request);
   const u = (username || "").trim();
   const em = (email || "").trim();
 
@@ -22,6 +22,15 @@ export async function onRequestPost({ request, env }) {
 
   const exists = await env.DB.prepare("SELECT username FROM users WHERE username = ?").bind(u).first();
   if (exists) return json({ error: "Användarnamnet är upptaget." }, 409);
+
+  let referredBy = null;
+  const refCode = (referralCode || "").trim();
+  if (refCode) {
+    if (refCode === u) return json({ error: "Du kan inte värva dig själv." }, 400);
+    const referrer = await env.DB.prepare("SELECT username FROM users WHERE username = ?").bind(refCode).first();
+    if (!referrer) return json({ error: "Värvningskoden hittades inte — dubbelkolla stavningen." }, 400);
+    referredBy = referrer.username;
+  }
 
   const { hash, salt } = await hashPassword(password);
   const countRow = await env.DB.prepare("SELECT COUNT(*) as c FROM users").first();
@@ -36,9 +45,9 @@ export async function onRequestPost({ request, env }) {
   const expires = Date.now() + CODE_TTL_MS;
 
   await env.DB.prepare(
-    `INSERT INTO users (username, email, password_hash, salt, verified, is_admin, banned, verify_code, verify_code_expires, created_at)
-     VALUES (?, ?, ?, ?, 0, ?, 0, ?, ?, ?)`
-  ).bind(u, em, hash, salt, isAdmin ? 1 : 0, code, expires, Date.now()).run();
+    `INSERT INTO users (username, email, password_hash, salt, verified, is_admin, banned, verify_code, verify_code_expires, referred_by, created_at)
+     VALUES (?, ?, ?, ?, 0, ?, 0, ?, ?, ?, ?)`
+  ).bind(u, em, hash, salt, isAdmin ? 1 : 0, code, expires, referredBy, Date.now()).run();
 
   const { subject, html } = verifyEmail(code);
   const result = await sendEmail(env, em, subject, html);

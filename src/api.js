@@ -41,7 +41,7 @@ async function uploadFile(path, file) {
 
 export const api = {
   // auth
-  register: (username, email, password) => request("POST", "/api/register", { username, email, password }),
+  register: (username, email, password, referralCode) => request("POST", "/api/register", { username, email, password, referralCode }),
   verify: async (username, code) => {
     const data = await request("POST", "/api/verify", { username, code });
     setToken(data.token);
@@ -86,6 +86,17 @@ export const api = {
   favorites: () => request("GET", "/api/favorites"),
   addFavorite: (itemId) => request("POST", "/api/favorites", { itemId }),
   removeFavorite: (itemId) => request("DELETE", `/api/favorites/${itemId}`),
+
+  // wanted ads
+  wantedAds: () => request("GET", "/api/wanted"),
+  createWantedAd: (title, note) => request("POST", "/api/wanted", { title, note }),
+  deleteWantedAd: (id) => request("DELETE", `/api/wanted/${id}`),
+  respondToWantedAd: (id, note) => request("POST", `/api/wanted/${id}/respond`, { note }),
+
+  // watches (bevakningar)
+  watches: () => request("GET", "/api/watches"),
+  createWatch: (query) => request("POST", "/api/watches", { query }),
+  deleteWatch: (id) => request("DELETE", `/api/watches/${id}`),
 
   // threads
   threads: () => request("GET", "/api/threads"),

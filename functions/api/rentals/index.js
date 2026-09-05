@@ -35,7 +35,8 @@ export async function onRequestPost({ request, env }) {
   const shipCost = delivery === "ship" ? listing.shipping_price : 0;
   const rentCost = listing.price * days;
   const totalKr = rentCost + shipCost;
-  const applicationFeeOre = Math.round(rentCost * (PLATFORM_FEE_PCT / 100)) * 100;
+  const usingCredit = owner.free_fee_credits > 0;
+  const applicationFeeOre = usingCredit ? 0 : Math.round(rentCost * (PLATFORM_FEE_PCT / 100)) * 100;
 
   const url = new URL(request.url);
   const origin = `${url.protocol}//${url.host}`;
@@ -66,6 +67,7 @@ export async function onRequestPost({ request, env }) {
         delivery,
         shipCost: String(shipCost),
         rentCost: String(rentCost),
+        usingCredit: usingCredit ? "1" : "0",
       },
       success_url: `${origin}/?rented=success`,
       cancel_url: `${origin}/?rented=cancel`,

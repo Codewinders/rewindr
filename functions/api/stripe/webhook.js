@@ -2,6 +2,25 @@ import { makeId } from "../../../lib/db.js";
 import { verifyStripeWebhook, stripe } from "../../../lib/stripe.js";
 import { sendEmail, rentalEmail, purchaseEmail } from "../../../lib/email.js";
 
+// Konsumerar en värvningsrabatt om den användes för den här affären, och
+// belönar värvaren med en ny rabatt om det här är köparens/hyresgästens
+// FÖRSTA genomförda affär och de blev värvade av någon.
+async function handleCreditsAndReferral(env, { payerUsername, earnerUsername, usingCredit }) {
+  if (usingCredit) {
+    await env.DB.prepare("UPDATE users SET free_fee_credits = MAX(0, free_fee_credits - 1) WHERE username = ?")
+      .bind(earnerUsername).run();
+  }
+
+  const payer = await env.DB.prepare("SELECT referred_by, referral_reward_granted FROM users WHERE username = ?")
+    .bind(payerUsername).first();
+  if (payer?.referred_by && !payer.referral_reward_granted) {
+    await env.DB.prepare("UPDATE users SET free_fee_credits = free_fee_credits + 1 WHERE username = ?")
+      .bind(payer.referred_by).run();
+    await env.DB.prepare("UPDATE users SET referral_reward_granted = 1 WHERE username = ?")
+      .bind(payerUsername).run();
+  }
+}
+
 export async function onRequestPost({ request, env }) {
   const rawBody = await request.text();
   const signature = request.headers.get("Stripe-Signature");
@@ -16,11 +35,13 @@ export async function onRequestPost({ request, env }) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const m = session.metadata || {};
+    const usingCredit = m.usingCredit === "1";
 
     // ---- Köp (engångsförsäljning) ----
     if (m.kind === "purchase" && m.itemId && m.buyerUsername) {
       const purchaseId = makeId("purchase");
       try {
+        const applicationFee = usingCredit ? 0 : Math.round((Number(m.price) || 0) * 0.10) * 100;
         await env.DB.prepare(
           `INSERT INTO purchases
            (id, item_id, buyer_name, seller_name, price, ship_cost, delivery, purchased_at,
@@ -29,12 +50,13 @@ export async function onRequestPost({ request, env }) {
         ).bind(
           purchaseId, m.itemId, m.buyerUsername, m.sellerUsername,
           Number(m.price) || 0, Number(m.shipCost) || 0, m.delivery, Date.now(),
-          session.id, session.payment_intent,
-          Math.round((Number(m.price) || 0) * 0.10) * 100
+          session.id, session.payment_intent, applicationFee
         ).run();
 
         await env.DB.prepare("UPDATE listings SET sold = 1, sold_at = ? WHERE id = ?")
           .bind(Date.now(), m.itemId).run();
+
+        await handleCreditsAndReferral(env, { payerUsername: m.buyerUsername, earnerUsername: m.sellerUsername, usingCredit });
 
         const seller = await env.DB.prepare("SELECT email FROM users WHERE username = ?").bind(m.sellerUsername).first();
         const listing = await env.DB.prepare("SELECT title FROM listings WHERE id = ?").bind(m.itemId).first();
@@ -53,6 +75,7 @@ export async function onRequestPost({ request, env }) {
     else if (m.itemId && m.renterUsername) {
       const rentalId = makeId("rental");
       try {
+        const applicationFee = usingCredit ? 0 : Math.round((Number(m.rentCost) || 0) * 0.15) * 100;
         await env.DB.prepare(
           `INSERT INTO rentals
            (id, item_id, renter_name, owner_name, rented_at, days, delivery, ship_cost, rent_cost,
@@ -61,9 +84,10 @@ export async function onRequestPost({ request, env }) {
         ).bind(
           rentalId, m.itemId, m.renterUsername, m.ownerUsername, Date.now(),
           Number(m.days) || 1, m.delivery, Number(m.shipCost) || 0, Number(m.rentCost) || 0,
-          m.itemId, session.id, session.payment_intent,
-          Math.round((Number(m.rentCost) || 0) * 0.15) * 100
+          m.itemId, session.id, session.payment_intent, applicationFee
         ).run();
+
+        await handleCreditsAndReferral(env, { payerUsername: m.renterUsername, earnerUsername: m.ownerUsername, usingCredit });
 
         const owner = await env.DB.prepare("SELECT email FROM users WHERE username = ?").bind(m.ownerUsername).first();
         const listing = await env.DB.prepare("SELECT title FROM listings WHERE id = ?").bind(m.itemId).first();

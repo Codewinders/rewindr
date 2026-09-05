@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS users (
   stripe_charges_enabled INTEGER NOT NULL DEFAULT 0,
   verify_code TEXT,
   verify_code_expires INTEGER,
+  referred_by TEXT,
+  referral_reward_granted INTEGER NOT NULL DEFAULT 0,
+  free_fee_credits INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL
 );
 
@@ -125,3 +128,19 @@ CREATE TABLE IF NOT EXISTS favorites (
   created_at INTEGER NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_one_favorite_per_item ON favorites(username, item_id);
+
+CREATE TABLE IF NOT EXISTS wanted_ads (
+  id TEXT PRIMARY KEY,
+  username TEXT NOT NULL,
+  title TEXT NOT NULL,
+  note TEXT,
+  fulfilled INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS watches (
+  id TEXT PRIMARY KEY,
+  username TEXT NOT NULL,
+  query TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);

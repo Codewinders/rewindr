@@ -28,7 +28,8 @@ export async function onRequestPost({ request, env }) {
   const delivery = b.delivery === "ship" ? "ship" : "pickup";
   const shipCost = delivery === "ship" ? listing.shipping_price : 0;
   const totalKr = listing.sale_price + shipCost;
-  const applicationFeeOre = Math.round(listing.sale_price * (PLATFORM_FEE_PCT / 100)) * 100;
+  const usingCredit = seller.free_fee_credits > 0;
+  const applicationFeeOre = usingCredit ? 0 : Math.round(listing.sale_price * (PLATFORM_FEE_PCT / 100)) * 100;
 
   const url = new URL(request.url);
   const origin = `${url.protocol}//${url.host}`;
@@ -58,6 +59,7 @@ export async function onRequestPost({ request, env }) {
         delivery,
         shipCost: String(shipCost),
         price: String(listing.sale_price),
+        usingCredit: usingCredit ? "1" : "0",
       },
       success_url: `${origin}/?bought=success`,
       cancel_url: `${origin}/?bought=cancel`,

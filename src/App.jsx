@@ -56,6 +56,8 @@ function useRewindrData() {
     }
   }, []);
 
+  const [myCredits, setMyCredits] = useState(0);
+
   const refreshAll = useCallback(async () => {
     try {
       const [l, r, p, t, rv, u] = await Promise.all([
@@ -64,6 +66,12 @@ function useRewindrData() {
       setListings(l); setRentals(r); setPurchases(p); setThreads(t); setReviews(rv);
       setAccounts(buildAccountsMap(u));
       await refreshFavorites();
+      if (api.hasToken()) {
+        const me = await api.me().catch(() => null);
+        setMyCredits(me?.freeFeeCredits || 0);
+      } else {
+        setMyCredits(0);
+      }
     } catch (e) {
       setLastError("Kunde inte hämta data från servern: " + (e?.message || e));
     }
@@ -103,7 +111,7 @@ function useRewindrData() {
 
   return {
     listings, name, setName, rentals, purchases, threads, accounts, setAccounts, reviews,
-    favorites, toggleFavorite, ready, lastError, setLastError, refreshAll,
+    favorites, toggleFavorite, myCredits, ready, lastError, setLastError, refreshAll,
   };
 }
 
@@ -161,6 +169,7 @@ function Marquee({ query, setQuery }) {
 function Tabs({ active, setActive, showAdmin, showMyListings }) {
   const tabs = [
     { id: "browse", label: "Bläddra" },
+    { id: "wanted", label: "Efterlysningar" },
     { id: "list", label: "Lägg upp" },
     ...(showMyListings ? [{ id: "myListings", label: "Mina annonser" }] : []),
     ...(showMyListings ? [{ id: "favorites", label: "Favoriter" }] : []),
@@ -186,12 +195,13 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
 }
 
 // ---------- auth ----------
-function AuthPanel({ name, accounts, onAuthChange }) {
+function AuthPanel({ name, accounts, myCredits, onAuthChange }) {
   const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [pendingVerify, setPendingVerify] = useState(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -207,6 +217,7 @@ function AuthPanel({ name, accounts, onAuthChange }) {
   }, [name]);
 
   const [stripeError, setStripeError] = useState("");
+  const [showReferral, setShowReferral] = useState(false);
 
   const connectStripe = async () => {
     setStripeBusy(true);
@@ -241,6 +252,14 @@ function AuthPanel({ name, accounts, onAuthChange }) {
             )}
           </div>
           <div className="flex items-center gap-3">
+            {myCredits > 0 && (
+              <span className="flex items-center gap-1 text-[11px]" style={{ color: "#ffe94a" }}>
+                <Award size={13} /> {myCredits} rabatterad{myCredits > 1 ? "e" : ""} affär{myCredits > 1 ? "er" : ""}
+              </span>
+            )}
+            <button onClick={() => setShowReferral((v) => !v)} className="flex items-center gap-1 text-[11px]" style={{ color: "#8b5cf6" }}>
+              <Repeat size={13} /> Bjud in en vän
+            </button>
             {stripeStatus && (
               stripeStatus.chargesEnabled ? (
                 <span className="flex items-center gap-1 text-[11px]" style={{ color: "#4ade80" }}>
@@ -265,6 +284,15 @@ function AuthPanel({ name, accounts, onAuthChange }) {
             Stripe-fel: {stripeError}
           </div>
         )}
+        {showReferral && (
+          <div className="mt-2 text-xs rounded-lg p-3" style={{ background: "#8b5cf615", border: "1px solid #8b5cf644", color: "#c9b8e0", ...fontBody }}>
+            <p className="mb-1.5">Bjud in en vän! Ge dem din kod nedan så de kan fylla i den när de registrerar sig. När de gör sin första affär på Rewindr får du en avgiftsfri affär tillbaka.</p>
+            <div className="flex items-center gap-2">
+              <code className="px-2 py-1 rounded" style={{ background: "#121214", color: "#ffe94a" }}>{name}</code>
+              <button onClick={() => navigator.clipboard?.writeText(name)} style={{ color: "#21e6ec" }}>Kopiera</button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -279,7 +307,7 @@ function AuthPanel({ name, accounts, onAuthChange }) {
     if (password !== confirm) return setError("Lösenorden matchar inte.");
     setBusy(true);
     try {
-      const data = await api.register(u, em, password);
+      const data = await api.register(u, em, password, referralCode.trim());
       setPendingVerify(u);
       if (data.emailWarning) setError(data.emailWarning);
     } catch (err) {
@@ -360,6 +388,11 @@ function AuthPanel({ name, accounts, onAuthChange }) {
                 className="w-full px-3 py-2 rounded-md outline-none text-sm" style={inputStyle} />
               {mode === "register" && (
                 <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Upprepa lösenord"
+                  onKeyDown={(e) => { if (e.key === "Enter") submitFn(e); }}
+                  className="w-full px-3 py-2 rounded-md outline-none text-sm" style={inputStyle} />
+              )}
+              {mode === "register" && (
+                <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="Värvningskod (valfritt)"
                   onKeyDown={(e) => { if (e.key === "Enter") submitFn(e); }}
                   className="w-full px-3 py-2 rounded-md outline-none text-sm" style={inputStyle} />
               )}
@@ -1462,6 +1495,81 @@ function MyRentals({ rentals, listings, name, onReturn }) {
 }
 
 // mode: "buyer" (visar mina köp) eller "seller" (visar mina sålda)
+// ---------- wanted ads (efterlysningar) ----------
+function WantedAdCard({ ad, name, onDelete, onRespond }) {
+  const [responding, setResponding] = useState(false);
+  const [note, setNote] = useState("");
+  const [sent, setSent] = useState(false);
+  const isMine = ad.username === name;
+
+  const send = () => {
+    onRespond(ad.id, note.trim());
+    setSent(true);
+    setResponding(false);
+  };
+
+  return (
+    <div className="rounded-xl border p-4" style={{ borderColor: "#33333a", background: "#1c1c20" }}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-base" style={{ ...fontDisplay, color: "#f3eefc" }}>{ad.title}</h3>
+        {isMine && (
+          <button onClick={() => onDelete(ad.id)} style={{ color: "#ff8a8a" }}><Trash2 size={14} /></button>
+        )}
+      </div>
+      <div className="text-xs mt-1" style={{ color: "#8a7aa8", ...fontBody }}>Efterlyst av {ad.username}</div>
+      {ad.note && <p className="text-xs mt-1" style={{ color: "#c9b8e0", ...fontBody }}>{ad.note}</p>}
+
+      {!isMine && name && !sent && (
+        responding ? (
+          <div className="mt-2 space-y-2">
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Valfritt meddelande…"
+              className="w-full px-3 py-2 rounded-md outline-none text-xs" style={{ background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody }} />
+            <button onClick={send} className="w-full py-1.5 rounded-md text-xs" style={{ background: "#4ade80", color: "#121214", ...fontDisplay }}>SKICKA</button>
+          </div>
+        ) : (
+          <button onClick={() => setResponding(true)} className="mt-2 text-xs" style={{ color: "#4ade80", ...fontBody }}>Jag har den här!</button>
+        )
+      )}
+      {sent && <p className="text-xs mt-2" style={{ color: "#4ade80", ...fontBody }}>Skickat! {ad.username} har fått en mejlnotis.</p>}
+    </div>
+  );
+}
+
+function WantedAdsPanel({ ads, name, onAdd, onDelete, onRespond }) {
+  const [title, setTitle] = useState("");
+  const [note, setNote] = useState("");
+
+  const submit = () => {
+    if (!title.trim()) return;
+    onAdd(title.trim(), note.trim());
+    setTitle(""); setNote("");
+  };
+
+  return (
+    <div className="max-w-2xl">
+      {name && (
+        <div className="rounded-xl border p-4 mb-5 space-y-2" style={{ borderColor: "#33333a", background: "#1c1c20" }}>
+          <h2 className="text-xl mb-1" style={{ ...fontDisplay, color: "#ffe94a" }}>Efterlys en titel</h2>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Vad letar du efter?"
+            className="w-full px-3 py-2 rounded-md outline-none text-sm" style={{ background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody }} />
+          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Detaljer (valfritt) — t.ex. vilket format"
+            className="w-full px-3 py-2 rounded-md outline-none text-sm" style={{ background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody }} />
+          <button onClick={submit} className="w-full py-2 rounded-md text-sm" style={{ background: "#ffe94a", color: "#121214", ...fontDisplay }}>LÄGG UPP EFTERLYSNING</button>
+        </div>
+      )}
+      {ads.length === 0 ? (
+        <div className="text-center py-10 text-xs" style={{ color: "#6d5d8a", ...fontBody }}>Inga efterlysningar just nu.</div>
+      ) : (
+        <div className="space-y-3">
+          {ads.map((ad) => (
+            <WantedAdCard key={ad.id} ad={ad} name={name} onDelete={onDelete} onRespond={onRespond} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MyPurchases({ purchases, listings, name, mode }) {
   const mine = purchases.filter((p) => (mode === "buyer" ? p.buyerName : p.sellerName) === name);
   const items = mine
@@ -1782,7 +1890,7 @@ class ErrorBoundary extends React.Component {
 }
 
 function RewindrAppInner() {
-  const { listings, name, setName, rentals, purchases, threads, accounts, reviews, favorites, toggleFavorite, ready, lastError, setLastError, refreshAll } = useRewindrData();
+  const { listings, name, setName, rentals, purchases, threads, accounts, reviews, favorites, toggleFavorite, myCredits, ready, lastError, setLastError, refreshAll } = useRewindrData();
   const [viewingProfile, setViewingProfile] = useState(null);
   const [tab, setTab] = useState("browse");
   const [mineSection, setMineSection] = useState("rentals");
@@ -1792,6 +1900,35 @@ function RewindrAppInner() {
   const [openItem, setOpenItem] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [adminAccounts, setAdminAccounts] = useState({});
+  const [watches, setWatches] = useState([]);
+  const [wantedAds, setWantedAds] = useState([]);
+
+  const loadWatches = useCallback(async () => {
+    if (!api.hasToken()) return setWatches([]);
+    try { setWatches(await api.watches()); } catch { /* tyst */ }
+  }, []);
+  useEffect(() => { loadWatches(); }, [loadWatches, name]);
+
+  const loadWantedAds = useCallback(async () => {
+    try { setWantedAds(await api.wantedAds()); } catch { /* tyst */ }
+  }, []);
+  useEffect(() => { loadWantedAds(); }, [loadWantedAds]);
+
+  const handleAddWatch = async (q) => {
+    try { await api.createWatch(q); await loadWatches(); } catch (err) { setLastError(err.message); }
+  };
+  const handleRemoveWatch = async (id) => {
+    try { await api.deleteWatch(id); await loadWatches(); } catch (err) { setLastError(err.message); }
+  };
+  const handleAddWantedAd = async (title, note) => {
+    try { await api.createWantedAd(title, note); await loadWantedAds(); } catch (err) { setLastError(err.message); }
+  };
+  const handleDeleteWantedAd = async (id) => {
+    try { await api.deleteWantedAd(id); await loadWantedAds(); } catch (err) { setLastError(err.message); }
+  };
+  const handleRespondWantedAd = async (id, note) => {
+    try { await api.respondToWantedAd(id, note); } catch (err) { setLastError(err.message); }
+  };
   const [infoPage, setInfoPage] = useState(null);
 
   const filtered = listings.filter((i) => {
@@ -1914,7 +2051,7 @@ function RewindrAppInner() {
             <button onClick={() => setLastError("")} style={{ color: "#ff8a8a" }}>✕</button>
           </div>
         )}
-        <AuthPanel name={name} accounts={accounts} onAuthChange={handleAuthChange} />
+        <AuthPanel name={name} accounts={accounts} myCredits={myCredits} onAuthChange={handleAuthChange} />
         {!viewingProfile && <Marquee query={query} setQuery={setQuery} />}
         <Tabs active={tab} setActive={(id) => { setEditingItem(null); setViewingProfile(null); setTab(id); }} showAdmin={isAdmin} showMyListings={!!name} />
 
@@ -1937,6 +2074,16 @@ function RewindrAppInner() {
           <>
             {tab === "browse" && (
               <div>
+                {watches.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {watches.map((w) => (
+                      <span key={w.id} className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full" style={{ background: "#21e6ec15", color: "#21e6ec", ...fontBody }}>
+                        Bevakar: {w.query}
+                        <button onClick={() => handleRemoveWatch(w.id)} style={{ color: "#8a7aa8" }}><X size={11} /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="flex gap-2 mb-3 flex-wrap" style={fontBody}>
                   {[["all", "Allt"], ["movie", "Filmer"], ["game", "TV-spel"]].map(([id, label]) => (
                     <button key={id} onClick={() => setFilter(id)}
@@ -1964,13 +2111,31 @@ function RewindrAppInner() {
                   ))}
                 </div>
                 {filtered.length === 0 ? (
-                  <div className="text-center py-16" style={{ ...fontBody, color: "#6d5d8a" }}>Inget hittades — testa ett annat sökord.</div>
+                  <div className="text-center py-16" style={{ ...fontBody, color: "#6d5d8a" }}>
+                    <p className="mb-3">Inget hittades — testa ett annat sökord.</p>
+                    {name && query.trim() && (
+                      <button onClick={() => handleAddWatch(query.trim())}
+                        className="px-4 py-2 rounded-full text-xs inline-flex items-center gap-1.5"
+                        style={{ background: "#21e6ec15", border: "1px solid #21e6ec44", color: "#21e6ec" }}>
+                        Bevaka "{query.trim()}" — mejla mig när något dyker upp
+                      </button>
+                    )}
+                  </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                     {filtered.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={name ? toggleFavorite : undefined} />)}
                   </div>
                 )}
               </div>
+            )}
+            {tab === "wanted" && (
+              <WantedAdsPanel
+                ads={wantedAds}
+                name={name}
+                onAdd={handleAddWantedAd}
+                onDelete={handleDeleteWantedAd}
+                onRespond={handleRespondWantedAd}
+              />
             )}
             {tab === "list" && (
               name

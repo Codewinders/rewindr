@@ -1,4 +1,5 @@
 import { json, readJson, makeId, getSessionUser, publicListing } from "../../../lib/db.js";
+import { sendEmail, watchMatchEmail } from "../../../lib/email.js";
 
 export async function onRequestGet({ env }) {
   const { results } = await env.DB.prepare("SELECT * FROM listings ORDER BY created_at DESC").all();
@@ -39,5 +40,27 @@ export async function onRequestPost({ request, env }) {
   ).run();
 
   const row = await env.DB.prepare("SELECT * FROM listings WHERE id = ?").bind(id).first();
+
+  // Meddela alla som bevakar en sökterm som matchar den nya titeln —
+  // körs "best effort", ett fel här ska aldrig hindra att annonsen skapas.
+  try {
+    const { results: watches } = await env.DB.prepare("SELECT * FROM watches").all();
+    const titleLower = row.title.toLowerCase();
+    const genreLower = (row.genre || "").toLowerCase();
+    const matches = watches.filter((w) => {
+      const q = w.query.toLowerCase();
+      return titleLower.includes(q) || genreLower.includes(q);
+    });
+    for (const w of matches) {
+      const watcher = await env.DB.prepare("SELECT email FROM users WHERE username = ?").bind(w.username).first();
+      if (watcher?.email) {
+        const { subject, html } = watchMatchEmail(w.query, row.title);
+        await sendEmail(env, watcher.email, subject, html);
+      }
+    }
+  } catch (err) {
+    console.error("Kunde inte skicka bevakningsmejl:", err.message);
+  }
+
   return json(publicListing(row));
 }
