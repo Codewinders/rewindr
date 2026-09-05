@@ -776,7 +776,11 @@ function ShelfSpine({ item, onOpen, isFavorite, onToggleFavorite }) {
         <span className="text-[10px] uppercase tracking-wider text-center px-0.5" style={{ ...fontDisplay, color: "#121214", writingMode: "vertical-rl" }}>
           {item.title.length > 26 ? item.title.slice(0, 26) + "…" : item.title}
         </span>
-        <div className="w-3.5 h-3.5 rounded-full" style={{ background: "#12121466" }} />
+        {item.format && (
+          <span className="text-[8px] uppercase tracking-wide text-center px-0.5 opacity-80" style={{ ...fontDisplay, color: "#121214", writingMode: "vertical-rl" }}>
+            {item.format}
+          </span>
+        )}
       </div>
 
       {/* Omslaget — tonas fram när utdragen */}
