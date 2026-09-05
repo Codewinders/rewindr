@@ -109,7 +109,7 @@ function GlobalStyle() {
 // ---------- header ----------
 function Marquee({ query, setQuery }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border mb-8" style={{ borderColor: "#3a2a55", background: "linear-gradient(180deg, #150c24 0%, #0a0612 100%)" }}>
+    <div className="relative overflow-hidden rounded-2xl border mb-8" style={{ borderColor: "#33333a", background: "linear-gradient(180deg, #150c24 0%, #121214 100%)" }}>
       <div className="relative px-6 py-12 sm:py-16 text-center">
         <div className="flex items-center justify-center gap-2 text-[11px] tracking-[0.15em] uppercase mb-4" style={{ ...fontBody, color: "#6d5d8a" }}>
           <Rewind size={13} /> öppet dygnet runt · lån för lån
@@ -128,7 +128,7 @@ function Marquee({ query, setQuery }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Sök titel…"
             className="w-full pl-9 pr-3 py-2.5 rounded-full outline-none text-sm"
-            style={{ ...fontBody, background: "#0a0612", border: "1px solid #3a2a55", color: "#f3eefc" }}
+            style={{ ...fontBody, background: "#121214", border: "1px solid #33333a", color: "#f3eefc" }}
           />
         </div>
       </div>
@@ -145,13 +145,13 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
     ...(showAdmin ? [{ id: "admin", label: "Admin" }] : []),
   ];
   return (
-    <div className="flex gap-1.5 mb-8 flex-wrap justify-center p-1.5 rounded-xl" style={{ ...fontDisplay, background: "#140b22", border: "1px solid #3a2a5566" }}>
+    <div className="flex gap-1.5 mb-8 flex-wrap justify-center p-1.5 rounded-xl" style={{ ...fontDisplay, background: "#1c1c20", border: "1px solid #33333a66" }}>
       {tabs.map((t) => (
         <button key={t.id} onClick={() => setActive(t.id)}
           className="px-5 py-2.5 text-base rounded-lg transition-colors flex items-center gap-2"
           style={{
             letterSpacing: "0.04em",
-            color: active === t.id ? "#0a0612" : "#a99bc4",
+            color: active === t.id ? "#121214" : "#a99bc4",
             background: active === t.id ? "#ffe94a" : "transparent",
           }}>
           {t.id === "admin" && <Crown size={13} />}
@@ -176,7 +176,7 @@ function AuthPanel({ name, accounts, onAuthChange }) {
   const [stripeStatus, setStripeStatus] = useState(null);
   const [stripeBusy, setStripeBusy] = useState(false);
 
-  const inputStyle = { background: "#0a0612", border: "1px solid #3a2a55", color: "#f3eefc", ...fontBody };
+  const inputStyle = { background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody };
 
   useEffect(() => {
     if (!name) return;
@@ -206,7 +206,7 @@ function AuthPanel({ name, accounts, onAuthChange }) {
     const acc = accounts[name];
     return (
       <div className="mb-4">
-        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border flex-wrap" style={{ borderColor: "#3a2a55", background: "#140b22", ...fontBody }}>
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border flex-wrap" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
           <div className="flex items-center gap-2 text-sm flex-wrap" style={{ color: "#f3eefc" }}>
             <User size={15} style={{ color: "#21e6ec" }} />
             Inloggad som <strong>{name}</strong>
@@ -296,7 +296,7 @@ function AuthPanel({ name, accounts, onAuthChange }) {
 
   if (pendingVerify) {
     return (
-      <div className="mb-4 rounded-xl border p-4 max-w-sm mx-auto" style={{ borderColor: "#3a2a55", background: "#140b22", ...fontBody }}>
+      <div className="mb-4 rounded-xl border p-4 max-w-sm mx-auto" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
         <div className="text-sm mb-2" style={{ color: "#f3eefc" }}>Verifiera kontot "{pendingVerify}"</div>
         <p className="text-[11px] mb-2" style={{ color: "#6d5d8a" }}>
           Vi har skickat en 6-siffrig kod till din e-post. Ange den nedan (kolla även skräpposten om du inte ser den).
@@ -305,7 +305,7 @@ function AuthPanel({ name, accounts, onAuthChange }) {
           onKeyDown={(e) => { if (e.key === "Enter") submitVerify(e); }}
           className="w-full px-3 py-2 rounded-md outline-none text-sm mb-2" style={inputStyle} />
         {error && <div className="text-xs mb-2" style={{ color: "#ff8a8a" }}>{error}</div>}
-        <button type="button" disabled={busy} onClick={submitVerify} className="w-full py-2 rounded-md text-sm disabled:opacity-50" style={{ ...fontDisplay, fontSize: "14px", background: "#4ade80", color: "#0a0612" }}>
+        <button type="button" disabled={busy} onClick={submitVerify} className="w-full py-2 rounded-md text-sm disabled:opacity-50" style={{ ...fontDisplay, fontSize: "14px", background: "#4ade80", color: "#121214" }}>
           {busy ? "..." : "VERIFIERA"}
         </button>
       </div>
@@ -313,10 +313,10 @@ function AuthPanel({ name, accounts, onAuthChange }) {
   }
 
   return (
-    <div className="mb-4 rounded-xl border p-4 max-w-sm mx-auto" style={{ borderColor: "#3a2a55", background: "#140b22" }}>
+    <div className="mb-4 rounded-xl border p-4 max-w-sm mx-auto" style={{ borderColor: "#33333a", background: "#1c1c20" }}>
       <div className="flex gap-2 mb-3 text-xs" style={fontDisplay}>
         <button onClick={() => { setMode("login"); setError(""); }} style={{ color: mode === "login" ? "#ffe94a" : "#8a7aa8" }}>LOGGA IN</button>
-        <span style={{ color: "#3a2a55" }}>/</span>
+        <span style={{ color: "#33333a" }}>/</span>
         <button onClick={() => { setMode("register"); setError(""); }} style={{ color: mode === "register" ? "#ffe94a" : "#8a7aa8" }}>SKAPA KONTO</button>
       </div>
       <div className="space-y-2" style={fontBody}>
@@ -342,7 +342,7 @@ function AuthPanel({ name, accounts, onAuthChange }) {
               )}
               {error && <div className="text-xs" style={{ color: "#ff8a8a" }}>{error}</div>}
               <button type="button" disabled={busy} onClick={submitFn} className="w-full py-2 rounded-md text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                style={{ ...fontDisplay, fontSize: "14px", background: "#21e6ec", color: "#0a0612" }}>
+                style={{ ...fontDisplay, fontSize: "14px", background: "#21e6ec", color: "#121214" }}>
                 <LogIn size={14} /> {busy ? "..." : mode === "login" ? "LOGGA IN" : "SKAPA KONTO"}
               </button>
             </>
@@ -385,7 +385,7 @@ function OwnerReviews({ owner, reviews, name, onAddReview, isOwner }) {
   };
 
   return (
-    <div className="border-t pt-3 mt-3" style={{ borderColor: "#3a2a55" }}>
+    <div className="border-t pt-3 mt-3" style={{ borderColor: "#33333a" }}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2 text-xs" style={{ ...fontDisplay, fontSize: "13px", color: "#ffe94a" }}>
           <StarRow value={Math.round(avg)} />
@@ -398,17 +398,17 @@ function OwnerReviews({ owner, reviews, name, onAddReview, isOwner }) {
         )}
       </div>
       {open && (
-        <div className="rounded-lg p-2 space-y-2 mb-2" style={{ background: "#0a0612", border: "1px solid #3a2a55" }}>
+        <div className="rounded-lg p-2 space-y-2 mb-2" style={{ background: "#121214", border: "1px solid #33333a" }}>
           <StarRow value={rating} onChange={setRating} />
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder="Hur var uthyrningen?"
-            className="w-full px-2 py-1.5 rounded-md outline-none text-xs resize-none" style={{ background: "#140b22", border: "1px solid #3a2a55", color: "#f3eefc", ...fontBody }} />
-          <button type="button" onClick={submit} className="w-full py-1.5 rounded-md text-xs" style={{ background: "#21e6ec", color: "#0a0612", ...fontDisplay }}>SKICKA</button>
+            className="w-full px-2 py-1.5 rounded-md outline-none text-xs resize-none" style={{ background: "#1c1c20", border: "1px solid #33333a", color: "#f3eefc", ...fontBody }} />
+          <button type="button" onClick={submit} className="w-full py-1.5 rounded-md text-xs" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay }}>SKICKA</button>
         </div>
       )}
       {ownerReviews.length > 0 && (
         <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
           {ownerReviews.slice().reverse().map((r) => (
-            <div key={r.id} className="text-[11px] rounded-md p-1.5" style={{ background: "#0a0612", ...fontBody }}>
+            <div key={r.id} className="text-[11px] rounded-md p-1.5" style={{ background: "#121214", ...fontBody }}>
               <div className="flex items-center justify-between">
                 <span style={{ color: "#f3eefc" }}>{r.reviewerUsername}</span>
                 <StarRow value={r.rating} size={10} />
@@ -442,7 +442,7 @@ function AdminPanel({ listings, accounts, reviews, rentals, threads, onDeleteLis
           <button key={s.id} onClick={() => setSection(s.id)}
             className="px-3 py-1.5 rounded-full border"
             style={{
-              borderColor: section === s.id ? "#ffe94a" : "#3a2a55",
+              borderColor: section === s.id ? "#ffe94a" : "#33333a",
               color: section === s.id ? "#ffe94a" : "#8a7aa8",
               background: section === s.id ? "#ffe94a1a" : "transparent",
             }}>
@@ -455,7 +455,7 @@ function AdminPanel({ listings, accounts, reviews, rentals, threads, onDeleteLis
         <div className="space-y-2">
           {listings.length === 0 && <p className="text-xs" style={{ color: "#6d5d8a" }}>Inga titlar uppe.</p>}
           {listings.map((item) => (
-            <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg p-2.5 text-xs" style={{ background: "#140b22", border: "1px solid #3a2a55", ...fontBody }}>
+            <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg p-2.5 text-xs" style={{ background: "#1c1c20", border: "1px solid #33333a", ...fontBody }}>
               <div>
                 <div style={{ color: "#f3eefc" }}>{item.title}</div>
                 <div style={{ color: "#8a7aa8" }}>{item.genre} · hos {item.owner} · {item.price} kr/dag</div>
@@ -472,7 +472,7 @@ function AdminPanel({ listings, accounts, reviews, rentals, threads, onDeleteLis
         <div className="space-y-2">
           {Object.keys(accounts).length === 0 && <p className="text-xs" style={{ color: "#6d5d8a" }}>Inga registrerade konton.</p>}
           {Object.entries(accounts).map(([u, acc]) => (
-            <div key={u} className="flex items-center justify-between gap-2 rounded-lg p-2.5 text-xs flex-wrap" style={{ background: "#140b22", border: "1px solid #3a2a55", ...fontBody }}>
+            <div key={u} className="flex items-center justify-between gap-2 rounded-lg p-2.5 text-xs flex-wrap" style={{ background: "#1c1c20", border: "1px solid #33333a", ...fontBody }}>
               <div className="flex items-center gap-1.5" style={{ color: "#f3eefc" }}>
                 {u}
                 {acc.isAdmin && <Crown size={12} style={{ color: "#ffe94a" }} />}
@@ -498,7 +498,7 @@ function AdminPanel({ listings, accounts, reviews, rentals, threads, onDeleteLis
         <div className="space-y-2">
           {reviews.length === 0 && <p className="text-xs" style={{ color: "#6d5d8a" }}>Inga recensioner ännu.</p>}
           {reviews.map((r) => (
-            <div key={r.id} className="flex items-center justify-between gap-2 rounded-lg p-2.5 text-xs" style={{ background: "#140b22", border: "1px solid #3a2a55", ...fontBody }}>
+            <div key={r.id} className="flex items-center justify-between gap-2 rounded-lg p-2.5 text-xs" style={{ background: "#1c1c20", border: "1px solid #33333a", ...fontBody }}>
               <div>
                 <div style={{ color: "#f3eefc" }}>{r.reviewerUsername} → {r.ownerUsername} <StarRow value={r.rating} size={10} /></div>
                 <div style={{ color: "#8a7aa8" }}>{r.text}</div>
@@ -515,7 +515,7 @@ function AdminPanel({ listings, accounts, reviews, rentals, threads, onDeleteLis
           {rentals.map((r) => {
             const item = listings.find((l) => l.id === r.itemId);
             return (
-              <div key={r.id} className="rounded-lg p-2.5 text-xs" style={{ background: "#140b22", border: "1px solid #3a2a55", ...fontBody }}>
+              <div key={r.id} className="rounded-lg p-2.5 text-xs" style={{ background: "#1c1c20", border: "1px solid #33333a", ...fontBody }}>
                 <div style={{ color: "#f3eefc" }}>{item?.title || "(borttagen titel)"}</div>
                 <div style={{ color: "#8a7aa8" }}>
                   {r.renterName} hyr av {r.ownerName} · {r.days} {r.days === 1 ? "dag" : "dagar"} · {r.returned ? "återlämnad" : "aktiv"}
@@ -549,8 +549,8 @@ function Cassette({ item, onOpen }) {
   return (
     <button onClick={() => onOpen(item)}
       className="rw-card text-left rounded-xl overflow-hidden border transition-transform duration-200 group"
-      style={{ borderColor: "#3a2a55", background: "#140b22" }}>
-      <div className="h-28 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}22, #0a0612 80%)` }}>
+      style={{ borderColor: "#33333a", background: "#1c1c20" }}>
+      <div className="h-28 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}22, #121214 80%)` }}>
         <div className="absolute left-0 top-0 bottom-0 w-1 z-10" style={{ background: color }} />
         {item.format && (
           <div className="absolute top-2 right-2 z-10 rounded-full p-1.5" style={{ background: "rgba(10,6,18,0.75)", border: `1px solid ${color}66` }} title={item.format}>
@@ -564,7 +564,7 @@ function Cassette({ item, onOpen }) {
         )}
         {item.sold && (
           <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: "rgba(10,6,18,0.7)" }}>
-            <span className="px-3 py-1 rounded-full text-xs" style={{ ...fontDisplay, background: "#3a2a55", color: "#f3eefc" }}>SÅLD</span>
+            <span className="px-3 py-1 rounded-full text-xs" style={{ ...fontDisplay, background: "#33333a", color: "#f3eefc" }}>SÅLD</span>
           </div>
         )}
       </div>
@@ -591,7 +591,7 @@ function Cassette({ item, onOpen }) {
 
 function ChatThread({ thread, myName, onReply }) {
   const [text, setText] = useState("");
-  const inputStyle = { background: "#0a0612", border: "1px solid #3a2a55", color: "#f3eefc", ...fontBody };
+  const inputStyle = { background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody };
 
   const send = (e) => {
     e.preventDefault();
@@ -601,11 +601,11 @@ function ChatThread({ thread, myName, onReply }) {
   };
 
   return (
-    <div className="rounded-lg p-3 space-y-2" style={{ background: "#0a0612", border: "1px solid #4ade8044" }}>
+    <div className="rounded-lg p-3 space-y-2" style={{ background: "#121214", border: "1px solid #4ade8044" }}>
       <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
         {thread.messages.map((m, i) => (
           <div key={i} className="text-xs rounded-md px-2 py-1.5" style={{
-            background: m.from === myName ? "#4ade8022" : "#3a2a5555",
+            background: m.from === myName ? "#4ade8022" : "#33333a55",
             marginLeft: m.from === myName ? "20%" : 0,
             marginRight: m.from === myName ? 0 : "20%",
           }}>
@@ -618,7 +618,7 @@ function ChatThread({ thread, myName, onReply }) {
         <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Skriv ett svar…"
           onKeyDown={(e) => { if (e.key === "Enter") send(e); }}
           className="flex-1 px-3 py-2 rounded-md outline-none text-sm" style={inputStyle} />
-        <button type="button" onClick={send} className="px-3 rounded-md" style={{ background: "#4ade80", color: "#0a0612" }}>
+        <button type="button" onClick={send} className="px-3 rounded-md" style={{ background: "#4ade80", color: "#121214" }}>
           <Send size={14} />
         </button>
       </div>
@@ -657,17 +657,17 @@ function RentFlow({ item, alreadyRented, activeRental, name, onConfirm }) {
   }
 
   return (
-    <div className="rounded-lg p-3 space-y-3" style={{ background: "#0a0612", border: "1px solid #ff2fb044" }}>
+    <div className="rounded-lg p-3 space-y-3" style={{ background: "#121214", border: "1px solid #ff2fb044" }}>
       <div>
         <div className="text-[11px] mb-1.5" style={{ color: "#8a7aa8", ...fontBody }}>Antal dagar</div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => setDays((d) => Math.max(1, (Number(d) || 1) - 1))}
-            className="w-8 h-8 rounded-md text-sm" style={{ background: "#3a2a55", color: "#f3eefc" }}>−</button>
+            className="w-8 h-8 rounded-md text-sm" style={{ background: "#33333a", color: "#f3eefc" }}>−</button>
           <input type="number" min="1" value={days} onChange={(e) => setDays(e.target.value)}
             className="w-16 text-center py-1.5 rounded-md outline-none text-sm"
-            style={{ background: "#140b22", border: "1px solid #3a2a55", color: "#f3eefc", ...fontBody }} />
+            style={{ background: "#1c1c20", border: "1px solid #33333a", color: "#f3eefc", ...fontBody }} />
           <button type="button" onClick={() => setDays((d) => (Number(d) || 1) + 1)}
-            className="w-8 h-8 rounded-md text-sm" style={{ background: "#3a2a55", color: "#f3eefc" }}>+</button>
+            className="w-8 h-8 rounded-md text-sm" style={{ background: "#33333a", color: "#f3eefc" }}>+</button>
         </div>
       </div>
 
@@ -677,12 +677,12 @@ function RentFlow({ item, alreadyRented, activeRental, name, onConfirm }) {
           <div className="flex gap-2">
             <button onClick={() => setDeliveryChoice("pickup")}
               className="flex-1 py-2 rounded-md text-xs flex items-center justify-center gap-1.5"
-              style={{ background: deliveryChoice === "pickup" ? "#ff2fb022" : "transparent", border: `1px solid ${deliveryChoice === "pickup" ? "#ff2fb0" : "#3a2a55"}`, color: deliveryChoice === "pickup" ? "#ff2fb0" : "#8a7aa8" }}>
+              style={{ background: deliveryChoice === "pickup" ? "#ff2fb022" : "transparent", border: `1px solid ${deliveryChoice === "pickup" ? "#ff2fb0" : "#33333a"}`, color: deliveryChoice === "pickup" ? "#ff2fb0" : "#8a7aa8" }}>
               <Home size={13} /> Hämta (gratis)
             </button>
             <button onClick={() => setDeliveryChoice("ship")}
               className="flex-1 py-2 rounded-md text-xs flex items-center justify-center gap-1.5"
-              style={{ background: deliveryChoice === "ship" ? "#ff2fb022" : "transparent", border: `1px solid ${deliveryChoice === "ship" ? "#ff2fb0" : "#3a2a55"}`, color: deliveryChoice === "ship" ? "#ff2fb0" : "#8a7aa8" }}>
+              style={{ background: deliveryChoice === "ship" ? "#ff2fb022" : "transparent", border: `1px solid ${deliveryChoice === "ship" ? "#ff2fb0" : "#33333a"}`, color: deliveryChoice === "ship" ? "#ff2fb0" : "#8a7aa8" }}>
               <Truck size={13} /> Skicka (+{item.shippingPrice} kr)
             </button>
           </div>
@@ -704,7 +704,7 @@ function RentFlow({ item, alreadyRented, activeRental, name, onConfirm }) {
             <span>Frakt</span><span>{shipCost} kr</span>
           </div>
         )}
-        <div className="flex justify-between pt-1 border-t" style={{ borderColor: "#3a2a55", color: "#f3eefc" }}>
+        <div className="flex justify-between pt-1 border-t" style={{ borderColor: "#33333a", color: "#f3eefc" }}>
           <span>Att betala nu</span><span style={{ color: "#ffe94a" }}>{total} kr</span>
         </div>
       </div>
@@ -743,26 +743,26 @@ function BuyFlow({ item, alreadySold, name, onConfirm }) {
     return (
       <button onClick={() => setExpanded(true)}
         className="w-full py-2.5 rounded-lg text-sm"
-        style={{ ...fontDisplay, fontSize: "16px", background: "#4ade80", color: "#0a0612" }}>
+        style={{ ...fontDisplay, fontSize: "16px", background: "#4ade80", color: "#121214" }}>
         KÖP NU · {item.salePrice} KR
       </button>
     );
   }
 
   return (
-    <div className="rounded-lg p-3 space-y-3" style={{ background: "#0a0612", border: "1px solid #4ade8044" }}>
+    <div className="rounded-lg p-3 space-y-3" style={{ background: "#121214", border: "1px solid #4ade8044" }}>
       {item.delivery === "both" && (
         <div>
           <div className="text-[11px] mb-1.5" style={{ color: "#8a7aa8", ...fontBody }}>Hur vill du få den?</div>
           <div className="flex gap-2">
             <button onClick={() => setDeliveryChoice("pickup")}
               className="flex-1 py-2 rounded-md text-xs flex items-center justify-center gap-1.5"
-              style={{ background: deliveryChoice === "pickup" ? "#4ade8022" : "transparent", border: `1px solid ${deliveryChoice === "pickup" ? "#4ade80" : "#3a2a55"}`, color: deliveryChoice === "pickup" ? "#4ade80" : "#8a7aa8" }}>
+              style={{ background: deliveryChoice === "pickup" ? "#4ade8022" : "transparent", border: `1px solid ${deliveryChoice === "pickup" ? "#4ade80" : "#33333a"}`, color: deliveryChoice === "pickup" ? "#4ade80" : "#8a7aa8" }}>
               <Home size={13} /> Hämta (gratis)
             </button>
             <button onClick={() => setDeliveryChoice("ship")}
               className="flex-1 py-2 rounded-md text-xs flex items-center justify-center gap-1.5"
-              style={{ background: deliveryChoice === "ship" ? "#4ade8022" : "transparent", border: `1px solid ${deliveryChoice === "ship" ? "#4ade80" : "#3a2a55"}`, color: deliveryChoice === "ship" ? "#4ade80" : "#8a7aa8" }}>
+              style={{ background: deliveryChoice === "ship" ? "#4ade8022" : "transparent", border: `1px solid ${deliveryChoice === "ship" ? "#4ade80" : "#33333a"}`, color: deliveryChoice === "ship" ? "#4ade80" : "#8a7aa8" }}>
               <Truck size={13} /> Skicka (+{item.shippingPrice} kr)
             </button>
           </div>
@@ -783,13 +783,13 @@ function BuyFlow({ item, alreadySold, name, onConfirm }) {
             <span>Frakt</span><span>{shipCost} kr</span>
           </div>
         )}
-        <div className="flex justify-between pt-1 border-t" style={{ borderColor: "#3a2a55", color: "#f3eefc" }}>
+        <div className="flex justify-between pt-1 border-t" style={{ borderColor: "#33333a", color: "#f3eefc" }}>
           <span>Att betala nu</span><span style={{ color: "#4ade80" }}>{total} kr</span>
         </div>
       </div>
       <button onClick={() => onConfirm(deliveryChoice, shipCost)}
         className="w-full py-2 rounded-md text-sm"
-        style={{ ...fontDisplay, fontSize: "15px", background: "#4ade80", color: "#0a0612" }}>
+        style={{ ...fontDisplay, fontSize: "15px", background: "#4ade80", color: "#121214" }}>
         BEKRÄFTA KÖP · {total} KR
       </button>
     </div>
@@ -802,7 +802,7 @@ function TradeFlow({ item, myItems, onPropose }) {
   const [tradeType, setTradeType] = useState("temporary");
   const [days, setDays] = useState(7);
   const [message, setMessage] = useState("");
-  const inputStyle = { background: "#0a0612", border: "1px solid #3a2a55", color: "#f3eefc", ...fontBody };
+  const inputStyle = { background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody };
 
   if (!open) {
     return (
@@ -832,7 +832,7 @@ function TradeFlow({ item, myItems, onPropose }) {
   };
 
   return (
-    <div className="rounded-lg p-3 space-y-2" style={{ background: "#0a0612", border: "1px solid #8b5cf644" }}>
+    <div className="rounded-lg p-3 space-y-2" style={{ background: "#121214", border: "1px solid #8b5cf644" }}>
       <div>
         <label className="text-[11px]" style={{ color: "#8a7aa8" }}>Din titel att erbjuda</label>
         <select value={offeredId} onChange={(e) => setOfferedId(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md outline-none text-sm" style={inputStyle}>
@@ -842,12 +842,12 @@ function TradeFlow({ item, myItems, onPropose }) {
       <div className="flex gap-2">
         <button type="button" onClick={() => setTradeType("temporary")}
           className="flex-1 py-1.5 rounded-md text-xs"
-          style={{ background: tradeType === "temporary" ? "#8b5cf622" : "transparent", border: `1px solid ${tradeType === "temporary" ? "#8b5cf6" : "#3a2a55"}`, color: tradeType === "temporary" ? "#8b5cf6" : "#8a7aa8" }}>
+          style={{ background: tradeType === "temporary" ? "#8b5cf622" : "transparent", border: `1px solid ${tradeType === "temporary" ? "#8b5cf6" : "#33333a"}`, color: tradeType === "temporary" ? "#8b5cf6" : "#8a7aa8" }}>
           Tillfälligt
         </button>
         <button type="button" onClick={() => setTradeType("permanent")}
           className="flex-1 py-1.5 rounded-md text-xs"
-          style={{ background: tradeType === "permanent" ? "#8b5cf622" : "transparent", border: `1px solid ${tradeType === "permanent" ? "#8b5cf6" : "#3a2a55"}`, color: tradeType === "permanent" ? "#8b5cf6" : "#8a7aa8" }}>
+          style={{ background: tradeType === "permanent" ? "#8b5cf622" : "transparent", border: `1px solid ${tradeType === "permanent" ? "#8b5cf6" : "#33333a"}`, color: tradeType === "permanent" ? "#8b5cf6" : "#8a7aa8" }}>
           Permanent
         </button>
       </div>
@@ -879,7 +879,7 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, alread
   if (!item) return null;
   const color = GENRE_COLORS[item.genre] || "#21e6ec";
   const Icon = iconFor(item.type);
-  const inputStyle = { background: "#0a0612", border: "1px solid #3a2a55", color: "#f3eefc", ...fontBody };
+  const inputStyle = { background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody };
 
   const itemThreads = threads.filter((t) => t.itemId === item.id);
   const myThread = itemThreads.find((t) => t.buyerName === name);
@@ -892,8 +892,8 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, alread
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(5,2,12,0.8)" }} onClick={onClose}>
-      <div className="w-full max-w-sm rounded-2xl border overflow-hidden max-h-[90vh] overflow-y-auto" style={{ borderColor: color + "66", background: "#140b22" }} onClick={(e) => e.stopPropagation()}>
-        <div className="h-32 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}33, #0a0612 85%)` }}>
+      <div className="w-full max-w-sm rounded-2xl border overflow-hidden max-h-[90vh] overflow-y-auto" style={{ borderColor: color + "66", background: "#1c1c20" }} onClick={(e) => e.stopPropagation()}>
+        <div className="h-32 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}33, #121214 85%)` }}>
           {item.format && (
             <div className="absolute top-3 left-3 z-10 rounded-full p-1.5 flex items-center gap-1" style={{ background: "rgba(10,6,18,0.75)", border: `1px solid ${color}66` }}>
               {React.createElement(formatIcon(item), { size: 13, style: { color } })}
@@ -949,12 +949,12 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, alread
                 </button>
                 <button onClick={() => onRemove(item)}
                   className="flex-1 py-2.5 rounded-lg text-sm flex items-center justify-center gap-2"
-                  style={{ ...fontDisplay, fontSize: "16px", background: "#3a2a55", color: "#ff8a8a" }}>
+                  style={{ ...fontDisplay, fontSize: "16px", background: "#33333a", color: "#ff8a8a" }}>
                   <Trash2 size={16} /> TA BORT
                 </button>
               </div>
               {itemThreads.length > 0 && (
-                <div className="border-t pt-4" style={{ borderColor: "#3a2a55" }}>
+                <div className="border-t pt-4" style={{ borderColor: "#33333a" }}>
                   <div className="flex items-center gap-2 text-xs mb-2" style={{ color: "#ffe94a", ...fontDisplay, fontSize: "13px" }}>
                     <Inbox size={14} /> FÖRFRÅGNINGAR & BYTEN ({itemThreads.length})
                   </div>
@@ -963,7 +963,7 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, alread
                       <div key={t.id}>
                         <button onClick={() => setOpenThreadId(openThreadId === t.id ? null : t.id)}
                           className="w-full text-left text-xs rounded-lg p-2"
-                          style={{ background: "#0a0612", border: "1px solid #3a2a55", color: "#f3eefc" }}>
+                          style={{ background: "#121214", border: "1px solid #33333a", color: "#f3eefc" }}>
                           <div className="flex items-center justify-between">
                             <span className="flex items-center gap-1">
                               {t.kind === "trade" && <Repeat size={11} style={{ color: "#8b5cf6" }} />}
@@ -1020,11 +1020,11 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, alread
                     </button>
                   )}
                   {askOpen && (
-                    <div className="rounded-lg p-3 space-y-2" style={{ background: "#0a0612", border: "1px solid #4ade8044" }}>
+                    <div className="rounded-lg p-3 space-y-2" style={{ background: "#121214", border: "1px solid #4ade8044" }}>
                       <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={2} placeholder="t.ex. Hej! Vill du sälja den, och för hur mycket?"
                         className="w-full px-3 py-2 rounded-md outline-none text-sm resize-none" style={inputStyle} />
                       <button type="button" onClick={submitAsk} className="w-full py-2 rounded-md text-sm flex items-center justify-center gap-2"
-                        style={{ ...fontDisplay, fontSize: "14px", background: "#4ade80", color: "#0a0612" }}>
+                        style={{ ...fontDisplay, fontSize: "14px", background: "#4ade80", color: "#121214" }}>
                         <Send size={14} /> SKICKA FÖRFRÅGAN
                       </button>
                     </div>
@@ -1064,7 +1064,7 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
 
   useEffect(() => { if (type === "game" && !PLATFORMS.includes(format)) setFormat(PLATFORMS[0]); if (type === "movie" && !FORMATS.includes(format)) setFormat(FORMATS[1]); }, [type]);
 
-  const inputStyle = { background: "#0a0612", border: "1px solid #3a2a55", color: "#f3eefc", ...fontBody };
+  const inputStyle = { background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody };
 
   // Krymper bilden till max 800px bredd/höjd och komprimerar som JPEG
   // innan uppladdning — håller lagringen liten och sidan snabb.
@@ -1147,7 +1147,7 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
   };
 
   return (
-    <div className="max-w-md space-y-4 rounded-2xl border p-5" style={{ borderColor: "#3a2a55", background: "#140b22", ...fontBody }}>
+    <div className="max-w-md space-y-4 rounded-2xl border p-5" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-2xl" style={{ ...fontDisplay, color: "#ffe94a" }}>{editingItem ? "Redigera titel" : "Lägg upp en titel"}</h2>
         {editingItem && (
@@ -1158,7 +1158,7 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
       <div>
         <label className="text-xs" style={{ color: "#8a7aa8" }}>Omslagsbild (valfritt)</label>
         <label className="mt-1 flex items-center justify-center gap-2 rounded-md border border-dashed cursor-pointer py-3 text-xs"
-          style={{ borderColor: "#3a2a55", color: uploading ? "#8a7aa8" : "#21e6ec" }}>
+          style={{ borderColor: "#33333a", color: uploading ? "#8a7aa8" : "#21e6ec" }}>
           <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} disabled={uploading} />
           {uploading ? "Laddar upp…" : imagePreview ? "Byt bild" : "Välj eller ta en bild"}
         </label>
@@ -1273,7 +1273,7 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
       )}
       {formError && <div className="text-xs" style={{ color: "#ff8a8a" }}>{formError}</div>}
       <button type="button" onClick={submit} className="w-full py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm"
-        style={{ ...fontDisplay, fontSize: "16px", background: "#21e6ec", color: "#0a0612", boxShadow: "0 0 12px #21e6ec40" }}>
+        style={{ ...fontDisplay, fontSize: "16px", background: "#21e6ec", color: "#121214", boxShadow: "0 0 12px #21e6ec40" }}>
         {editingItem ? "SPARA ÄNDRINGAR" : <><Plus size={16} /> LÄGG TILL I HYLLAN</>}
       </button>
       <p className="text-[11px] pt-1" style={{ color: "#6d5d8a" }}>Titlar du lägger upp blir synliga för alla som öppnar Rewindr.</p>
@@ -1302,7 +1302,7 @@ function MyRentals({ rentals, listings, name, onReturn }) {
         const color = GENRE_COLORS[item.genre] || "#21e6ec";
         const total = r.rentCost + (r.shipCost || 0);
         return (
-          <div key={r.id} className="rounded-xl border p-4 flex items-center gap-3" style={{ borderColor: color + "44", background: "#140b22" }}>
+          <div key={r.id} className="rounded-xl border p-4 flex items-center gap-3" style={{ borderColor: color + "44", background: "#1c1c20" }}>
             {React.createElement(iconFor(item.type), { size: 22, style: { color } })}
             <div className="flex-1" style={fontBody}>
               <div className="text-sm flex items-center gap-2" style={{ color: "#f3eefc" }}>
@@ -1355,7 +1355,7 @@ function MyPurchases({ purchases, listings, name, mode }) {
         const color = GENRE_COLORS[item.genre] || "#4ade80";
         const total = p.price + (p.shipCost || 0);
         return (
-          <div key={p.id} className="rounded-xl border p-4 flex items-center gap-3" style={{ borderColor: color + "44", background: "#140b22" }}>
+          <div key={p.id} className="rounded-xl border p-4 flex items-center gap-3" style={{ borderColor: color + "44", background: "#1c1c20" }}>
             {React.createElement(iconFor(item.type || "movie"), { size: 22, style: { color } })}
             <div className="flex-1" style={fontBody}>
               <div className="text-sm" style={{ color: "#f3eefc" }}>{item.title || "(borttagen titel)"}</div>
@@ -1431,7 +1431,7 @@ function InfoModal({ page, onClose }) {
   if (!page) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(5,2,12,0.85)" }} onClick={onClose}>
-      <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border p-6" style={{ borderColor: "#3a2a55", background: "#140b22" }} onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border p-6" style={{ borderColor: "#33333a", background: "#1c1c20" }} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl" style={{ ...fontDisplay, color: "#ffe94a" }}>
             {page === "about" && "Om Rewindr"}
@@ -1492,7 +1492,7 @@ function Footer({ onOpenInfo }) {
   ];
   return (
     <div className="max-w-5xl mx-auto px-4 pb-10 pt-6">
-      <div className="flex flex-wrap gap-4 justify-center text-xs border-t pt-6" style={{ borderColor: "#3a2a5566", ...fontBody }}>
+      <div className="flex flex-wrap gap-4 justify-center text-xs border-t pt-6" style={{ borderColor: "#33333a66", ...fontBody }}>
         {links.map((l) => (
           <button key={l.id} onClick={() => onOpenInfo(l.id)} style={{ color: "#8a7aa8" }}>
             {l.label}
@@ -1518,13 +1518,13 @@ function CookieBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[60] p-4" style={{ background: "#140b22", borderTop: "1px solid #3a2a55" }}>
+    <div className="fixed bottom-0 left-0 right-0 z-[60] p-4" style={{ background: "#1c1c20", borderTop: "1px solid #33333a" }}>
       <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs" style={{ color: "#c9b8e0", ...fontBody }}>
           Vi använder nödvändig lagring för inloggning och grundläggande, cookielös besöksstatistik. Inga spårningscookies för reklam.
         </p>
         <button onClick={accept} className="px-4 py-1.5 rounded-md text-xs shrink-0"
-          style={{ background: "#21e6ec", color: "#0a0612", ...fontDisplay }}>
+          style={{ background: "#21e6ec", color: "#121214", ...fontDisplay }}>
           OK
         </button>
       </div>
@@ -1544,15 +1544,15 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen w-full flex items-center justify-center p-6" style={{ background: "#0a0612" }}>
-          <div className="max-w-sm text-center rounded-2xl border p-6" style={{ borderColor: "#3a2a55", background: "#140b22", ...fontBody }}>
+        <div className="min-h-screen w-full flex items-center justify-center p-6" style={{ background: "#121214" }}>
+          <div className="max-w-sm text-center rounded-2xl border p-6" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
             <h2 className="text-xl mb-2" style={{ ...fontDisplay, color: "#ff2fb0" }}>Något gick fel</h2>
             <p className="text-sm mb-4" style={{ color: "#c9b8e0" }}>
               Rewindr stötte på ett oväntat fel. Testa att ladda om.
             </p>
             <button onClick={() => this.setState({ hasError: false })}
               className="px-4 py-2 rounded-md text-sm"
-              style={{ background: "#21e6ec", color: "#0a0612", ...fontDisplay }}>
+              style={{ background: "#21e6ec", color: "#121214", ...fontDisplay }}>
               FÖRSÖK IGEN
             </button>
           </div>
@@ -1676,7 +1676,7 @@ function RewindrAppInner() {
   const adminToggleBanned = async (u) => { await api.adminToggleBanned(u); await loadAdminAccounts(); };
 
   return (
-    <div className="min-h-screen w-full" style={{ background: "#0a0612" }}>
+    <div className="min-h-screen w-full" style={{ background: "#121214" }}>
       <GlobalStyle />
       <div className="max-w-5xl mx-auto px-4 py-8">
         {lastError && (
@@ -1700,7 +1700,7 @@ function RewindrAppInner() {
                     <button key={id} onClick={() => setFilter(id)}
                       className="px-3 py-1.5 rounded-full text-xs border"
                       style={{
-                        borderColor: filter === id ? "#ff2fb0" : "#3a2a55",
+                        borderColor: filter === id ? "#ff2fb0" : "#33333a",
                         color: filter === id ? "#ff2fb0" : "#8a7aa8",
                         background: filter === id ? "#ff2fb01a" : "transparent",
                       }}>
@@ -1713,7 +1713,7 @@ function RewindrAppInner() {
                     <button key={id} onClick={() => setOfferFilter(id)}
                       className="px-3 py-1.5 rounded-full text-xs border"
                       style={{
-                        borderColor: offerFilter === id ? "#21e6ec" : "#3a2a55",
+                        borderColor: offerFilter === id ? "#21e6ec" : "#33333a",
                         color: offerFilter === id ? "#21e6ec" : "#8a7aa8",
                         background: offerFilter === id ? "#21e6ec1a" : "transparent",
                       }}>
@@ -1758,7 +1758,7 @@ function RewindrAppInner() {
                     <button key={id} onClick={() => setMineSection(id)}
                       className="px-4 py-2 rounded-full text-xs border transition-colors"
                       style={{
-                        borderColor: mineSection === id ? "#ffe94a" : "#3a2a55",
+                        borderColor: mineSection === id ? "#ffe94a" : "#33333a",
                         color: mineSection === id ? "#ffe94a" : "#8a7aa8",
                         background: mineSection === id ? "#ffe94a1a" : "transparent",
                       }}>
