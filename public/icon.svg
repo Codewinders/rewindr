@@ -1,6 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#0a0612"/>
-  <circle cx="256" cy="256" r="150" fill="none" stroke="#ff2fb0" stroke-width="18"/>
-  <path d="M256 150 L340 256 L256 362 L172 256 Z" fill="none" stroke="#21e6ec" stroke-width="14"/>
-  <circle cx="256" cy="256" r="36" fill="#ffe94a"/>
+  <defs>
+    <linearGradient id="rw-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff2fb0"/>
+      <stop offset="100%" stop-color="#21e6ec"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#121214"/>
+  <rect x="16" y="16" width="480" height="480" rx="84" fill="none" stroke="#33333a" stroke-width="8"/>
+  <!-- spola-tillbaka-symbol: två trianglar som pekar vänster -->
+  <path d="M266 176 L266 336 L146 256 Z" fill="url(#rw-grad)"/>
+  <path d="M386 176 L386 336 L266 256 Z" fill="url(#rw-grad)"/>
 </svg>

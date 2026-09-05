@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS listings (
   for_sale INTEGER NOT NULL DEFAULT 0,
   sale_price INTEGER,
   sold INTEGER NOT NULL DEFAULT 0,
+  shelf_only INTEGER NOT NULL DEFAULT 0,
   sold_at INTEGER,
   delivery TEXT NOT NULL DEFAULT 'pickup',
   shipping_price INTEGER NOT NULL DEFAULT 0,
