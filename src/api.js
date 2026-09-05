@@ -82,6 +82,11 @@ export const api = {
   stripeConnect: () => request("POST", "/api/stripe/connect"),
   stripeStatus: () => request("GET", "/api/stripe/status"),
 
+  // favorites
+  favorites: () => request("GET", "/api/favorites"),
+  addFavorite: (itemId) => request("POST", "/api/favorites", { itemId }),
+  removeFavorite: (itemId) => request("DELETE", `/api/favorites/${itemId}`),
+
   // threads
   threads: () => request("GET", "/api/threads"),
   createThread: (payload) => request("POST", "/api/threads", payload),

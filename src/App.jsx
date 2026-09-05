@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { api } from "./api.js";
-import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard, Disc } from "lucide-react";
+import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard, Disc, Heart, Award } from "lucide-react";
 
 const FORMATS = ["VHS", "DVD", "Blu-ray", "4K Blu-ray"];
 const FORMAT_PRICE_HINT = {
@@ -35,16 +35,26 @@ function useRewindrData() {
   const [rentals, setRentals] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [threads, setThreads] = useState([]);
-  const [accounts, setAccounts] = useState({}); // { username: { verified, isAdmin } }
+  const [accounts, setAccounts] = useState({}); // { username: { verified, isAdmin, createdAt } }
   const [reviews, setReviews] = useState([]);
+  const [favorites, setFavorites] = useState([]); // lista av item-id:n
   const [ready, setReady] = useState(false);
   const [lastError, setLastError] = useState("");
 
   const buildAccountsMap = (users) => {
     const map = {};
-    users.forEach((u) => { map[u.username] = { verified: u.verified, isAdmin: u.isAdmin }; });
+    users.forEach((u) => { map[u.username] = { verified: u.verified, isAdmin: u.isAdmin, createdAt: u.createdAt }; });
     return map;
   };
+
+  const refreshFavorites = useCallback(async () => {
+    if (!api.hasToken()) return setFavorites([]);
+    try {
+      setFavorites(await api.favorites());
+    } catch {
+      // inte inloggad eller tillfälligt fel — tyst, favoriter är inte kritiskt
+    }
+  }, []);
 
   const refreshAll = useCallback(async () => {
     try {
@@ -53,10 +63,22 @@ function useRewindrData() {
       ]);
       setListings(l); setRentals(r); setPurchases(p); setThreads(t); setReviews(rv);
       setAccounts(buildAccountsMap(u));
+      await refreshFavorites();
     } catch (e) {
       setLastError("Kunde inte hämta data från servern: " + (e?.message || e));
     }
-  }, []);
+  }, [refreshFavorites]);
+
+  const toggleFavorite = useCallback(async (itemId) => {
+    const isFav = favorites.includes(itemId);
+    setFavorites((prev) => (isFav ? prev.filter((id) => id !== itemId) : [...prev, itemId])); // optimistisk uppdatering
+    try {
+      if (isFav) await api.removeFavorite(itemId);
+      else await api.addFavorite(itemId);
+    } catch {
+      await refreshFavorites(); // gick fel — synka tillbaka mot servern
+    }
+  }, [favorites, refreshFavorites]);
 
   useEffect(() => {
     (async () => {
@@ -81,7 +103,7 @@ function useRewindrData() {
 
   return {
     listings, name, setName, rentals, purchases, threads, accounts, setAccounts, reviews,
-    ready, lastError, setLastError, refreshAll,
+    favorites, toggleFavorite, ready, lastError, setLastError, refreshAll,
   };
 }
 
@@ -141,6 +163,7 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
     { id: "browse", label: "Bläddra" },
     { id: "list", label: "Lägg upp" },
     ...(showMyListings ? [{ id: "myListings", label: "Mina annonser" }] : []),
+    ...(showMyListings ? [{ id: "favorites", label: "Favoriter" }] : []),
     { id: "mine", label: "Mina lån" },
     ...(showAdmin ? [{ id: "admin", label: "Admin" }] : []),
   ];
@@ -370,6 +393,42 @@ function StarRow({ value, onChange, size = 16 }) {
   );
 }
 
+// Räknar fram förtroende-märken baserat på faktisk historik — inget
+// användare kan sätta själva, allt härlett från riktiga affärer.
+function computeBadges(username, { rentals, purchases, reviews, accounts }) {
+  const badges = [];
+  const dealsAsOwner = rentals.filter((r) => r.ownerName === username).length;
+  const dealsAsSeller = purchases.filter((p) => p.sellerName === username).length;
+  const totalDeals = dealsAsOwner + dealsAsSeller;
+  if (totalDeals >= 10) badges.push({ label: `${totalDeals}+ lyckade affärer`, color: "#4ade80" });
+  else if (totalDeals >= 1) badges.push({ label: `${totalDeals} genomförda affärer`, color: "#4ade80" });
+
+  const theirReviews = reviews.filter((r) => r.ownerUsername === username);
+  if (theirReviews.length >= 3) {
+    const avg = theirReviews.reduce((s, r) => s + r.rating, 0) / theirReviews.length;
+    if (avg >= 4.5) badges.push({ label: "Topprankad", color: "#ffe94a" });
+  }
+
+  const createdAt = accounts[username]?.createdAt;
+  if (createdAt) {
+    const year = new Date(createdAt).getFullYear();
+    badges.push({ label: `Medlem sedan ${year}`, color: "#8a7aa8" });
+  }
+  return badges;
+}
+
+// Klickbart användarnamn som öppnar profilvyn — samma stil används
+// överallt ett namn syns, så det alltid är tydligt att det går att klicka.
+function UserLink({ username, onOpen, className = "", style = {} }) {
+  return (
+    <button onClick={(e) => { e.stopPropagation(); onOpen(username); }}
+      className={`underline decoration-dotted hover:opacity-80 ${className}`}
+      style={{ ...style }}>
+      {username}
+    </button>
+  );
+}
+
 function OwnerReviews({ owner, reviews, name, onAddReview, isOwner }) {
   const [rating, setRating] = useState(5);
   const [text, setText] = useState("");
@@ -542,16 +601,24 @@ function formatIcon(item) {
   return Disc; // DVD, Blu-ray, 4K Blu-ray
 }
 
-function Cassette({ item, onOpen }) {
+function Cassette({ item, onOpen, isFavorite, onToggleFavorite }) {
   const color = GENRE_COLORS[item.genre] || "#21e6ec";
   const Icon = iconFor(item.type);
   const FormatIcon = formatIcon(item);
   return (
-    <button onClick={() => onOpen(item)}
-      className="rw-card text-left rounded-xl overflow-hidden border transition-transform duration-200 group"
+    <div onClick={() => onOpen(item)} role="button" tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter") onOpen(item); }}
+      className="rw-card text-left rounded-xl overflow-hidden border transition-transform duration-200 group cursor-pointer"
       style={{ borderColor: "#33333a", background: "#1c1c20" }}>
       <div className="h-28 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}22, #121214 80%)` }}>
         <div className="absolute left-0 top-0 bottom-0 w-1 z-10" style={{ background: color }} />
+        {onToggleFavorite && (
+          <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id); }}
+            className="absolute top-2 left-2 z-10 rounded-full p-1.5" style={{ background: "rgba(10,6,18,0.75)" }}
+            title={isFavorite ? "Ta bort från favoriter" : "Lägg till i favoriter"}>
+            <Heart size={13} fill={isFavorite ? "#ff2fb0" : "none"} style={{ color: isFavorite ? "#ff2fb0" : "#fff" }} />
+          </button>
+        )}
         {item.format && (
           <div className="absolute top-2 right-2 z-10 rounded-full p-1.5" style={{ background: "rgba(10,6,18,0.75)", border: `1px solid ${color}66` }} title={item.format}>
             <FormatIcon size={13} style={{ color }} />
@@ -585,7 +652,7 @@ function Cassette({ item, onOpen }) {
           {item.tradeable && <span className="flex items-center gap-1" style={{ color: "#8b5cf6" }}><Repeat size={10} /> byte</span>}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -869,7 +936,7 @@ function TradeFlow({ item, myItems, onPropose }) {
   );
 }
 
-function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, alreadyRented, activeRental, onReturnRental, isOwner, name, threads, onStartThread, onReply, myItems, onProposeTrade, reviews, onAddReview, accounts }) {
+function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpenProfile, alreadyRented, activeRental, onReturnRental, isOwner, name, threads, onStartThread, onReply, myItems, onProposeTrade, reviews, onAddReview, accounts }) {
   const [askOpen, setAskOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [openThreadId, setOpenThreadId] = useState(null);
@@ -918,7 +985,8 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, alread
           <p className="text-sm mb-4" style={{ color: "#c9b8e0" }}>{item.note}</p>
           <div className="flex items-center justify-between text-sm mb-1" style={{ color: "#8a7aa8" }}>
             <span className="flex items-center gap-1">
-              <User size={14} /> {item.owner}
+              <User size={14} />
+              <UserLink username={item.owner} onOpen={onOpenProfile} style={{ color: "#8a7aa8" }} />
               {accounts[item.owner]?.verified && <ShieldCheck size={13} style={{ color: "#4ade80" }} />}
             </span>
             <span style={{ color: "#ffe94a" }}>
@@ -1427,6 +1495,95 @@ const FAQ_ITEMS = [
   { q: "Var är Rewindr tillgängligt?", a: "Rewindr fungerar i hela Sverige, men vi växer stad för stad — så utbudet kan variera beroende på var du bor." },
 ];
 
+function ProfileModal({ username, onClose, listings, rentals, purchases, reviews, accounts, favorites, onToggleFavorite, onOpenItem }) {
+  const [profileFilter, setProfileFilter] = useState("all");
+  if (!username) return null;
+
+  const acc = accounts[username];
+  const theirItems = listings.filter((l) => l.owner === username && !l.sold).filter((l) => {
+    if (profileFilter === "all") return true;
+    if (profileFilter === "rent") return l.rentable;
+    if (profileFilter === "buy") return l.forSale;
+    return l.tradeable;
+  });
+  const theirReviews = reviews.filter((r) => r.ownerUsername === username);
+  const avg = theirReviews.length ? theirReviews.reduce((s, r) => s + r.rating, 0) / theirReviews.length : 0;
+  const badges = computeBadges(username, { rentals, purchases, reviews, accounts });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(5,2,12,0.85)" }} onClick={onClose}>
+      <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border p-6" style={{ borderColor: "#33333a", background: "#1c1c20" }} onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <div className="flex items-center gap-2 text-2xl" style={{ ...fontDisplay, color: "#f3eefc" }}>
+              <User size={22} style={{ color: "#21e6ec" }} />
+              {username}
+              {acc?.verified && <ShieldCheck size={18} style={{ color: "#4ade80" }} />}
+              {acc?.isAdmin && <Crown size={18} style={{ color: "#ffe94a" }} />}
+            </div>
+            <div className="flex items-center gap-2 text-xs mt-1" style={{ color: "#8a7aa8", ...fontBody }}>
+              <StarRow value={Math.round(avg)} size={13} />
+              {theirReviews.length > 0 ? `${avg.toFixed(1)} (${theirReviews.length} recensioner)` : "Inga recensioner än"}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ color: "#8a7aa8" }}><X size={20} /></button>
+        </div>
+
+        {badges.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-5">
+            {badges.map((b) => (
+              <span key={b.label} className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full" style={{ background: b.color + "1a", color: b.color, ...fontBody }}>
+                <Award size={11} /> {b.label}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className="flex gap-2 mb-4 flex-wrap" style={fontBody}>
+          {[["all", "Alla"], ["rent", "Hyra"], ["buy", "Köp"], ["trade", "Byt"]].map(([id, label]) => (
+            <button key={id} onClick={() => setProfileFilter(id)}
+              className="px-3 py-1.5 rounded-full text-xs border"
+              style={{
+                borderColor: profileFilter === id ? "#21e6ec" : "#33333a",
+                color: profileFilter === id ? "#21e6ec" : "#8a7aa8",
+                background: profileFilter === id ? "#21e6ec1a" : "transparent",
+              }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {theirItems.length === 0 ? (
+          <div className="text-center py-8 text-xs" style={{ color: "#6d5d8a", ...fontBody }}>Inga annonser i den här kategorin.</div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+            {theirItems.map((item) => (
+              <Cassette key={item.id} item={item} onOpen={onOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={onToggleFavorite} />
+            ))}
+          </div>
+        )}
+
+        {theirReviews.length > 0 && (
+          <div className="border-t pt-4" style={{ borderColor: "#33333a" }}>
+            <div className="text-sm mb-2" style={{ ...fontDisplay, fontSize: "14px", color: "#ffe94a" }}>RECENSIONER</div>
+            <div className="space-y-1.5">
+              {theirReviews.slice().reverse().map((r) => (
+                <div key={r.id} className="text-xs rounded-md p-2" style={{ background: "#121214", ...fontBody }}>
+                  <div className="flex items-center justify-between">
+                    <span style={{ color: "#f3eefc" }}>{r.reviewerUsername}</span>
+                    <StarRow value={r.rating} size={10} />
+                  </div>
+                  <div style={{ color: "#8a7aa8" }}>{r.text}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function InfoModal({ page, onClose }) {
   if (!page) return null;
   return (
@@ -1564,7 +1721,8 @@ class ErrorBoundary extends React.Component {
 }
 
 function RewindrAppInner() {
-  const { listings, name, setName, rentals, purchases, threads, accounts, reviews, ready, lastError, setLastError, refreshAll } = useRewindrData();
+  const { listings, name, setName, rentals, purchases, threads, accounts, reviews, favorites, toggleFavorite, ready, lastError, setLastError, refreshAll } = useRewindrData();
+  const [viewingProfile, setViewingProfile] = useState(null);
   const [tab, setTab] = useState("browse");
   const [mineSection, setMineSection] = useState("rentals");
   const [filter, setFilter] = useState("all");
@@ -1725,7 +1883,7 @@ function RewindrAppInner() {
                   <div className="text-center py-16" style={{ ...fontBody, color: "#6d5d8a" }}>Inget hittades — testa ett annat sökord.</div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {filtered.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} />)}
+                    {filtered.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={name ? toggleFavorite : undefined} />)}
                   </div>
                 )}
               </div>
@@ -1744,11 +1902,30 @@ function RewindrAppInner() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {myItems.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} />)}
+                    {myItems.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={name ? toggleFavorite : undefined} />)}
                   </div>
                 )
               ) : (
                 <div className="text-xs rounded-lg p-4 max-w-sm" style={{ background: "#21e6ec15", color: "#c9b8e0", ...fontBody }}>Logga in högst upp för att se dina annonser.</div>
+              )
+            )}
+            {tab === "favorites" && (
+              name ? (
+                (() => {
+                  const favItems = listings.filter((l) => favorites.includes(l.id));
+                  return favItems.length === 0 ? (
+                    <div className="text-center py-16" style={{ ...fontBody, color: "#6d5d8a" }}>
+                      <Heart className="mx-auto mb-3" size={28} />
+                      Inga favoriter än — klicka på hjärtat på en annons för att spara den här.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {favItems.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} isFavorite={true} onToggleFavorite={toggleFavorite} />)}
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="text-xs rounded-lg p-4 max-w-sm" style={{ background: "#21e6ec15", color: "#c9b8e0", ...fontBody }}>Logga in högst upp för att se dina favoriter.</div>
               )
             )}
             {tab === "mine" && (
@@ -1801,6 +1978,7 @@ function RewindrAppInner() {
         onRent={handleRent}
         onPurchase={handlePurchase}
         onEdit={(item) => { setEditingItem(item); setOpenItem(null); setTab("list"); }}
+        onOpenProfile={setViewingProfile}
         onRemove={handleRemove}
         alreadyRented={openItem ? isRented(openItem) : false}
         activeRental={openItem ? activeRentalFor(openItem) : null}
@@ -1815,6 +1993,18 @@ function RewindrAppInner() {
         reviews={reviews}
         onAddReview={handleAddReview}
         accounts={accounts}
+      />
+      <ProfileModal
+        username={viewingProfile}
+        onClose={() => setViewingProfile(null)}
+        listings={listings}
+        rentals={rentals}
+        purchases={purchases}
+        reviews={reviews}
+        accounts={accounts}
+        favorites={favorites}
+        onToggleFavorite={name ? toggleFavorite : undefined}
+        onOpenItem={(item) => { setViewingProfile(null); setOpenItem(item); }}
       />
       <Footer onOpenInfo={setInfoPage} />
       <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />

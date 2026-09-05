@@ -114,3 +114,11 @@ CREATE TABLE IF NOT EXISTS reviews (
   text TEXT,
   at INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS favorites (
+  id TEXT PRIMARY KEY,
+  username TEXT NOT NULL,
+  item_id TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_one_favorite_per_item ON favorites(username, item_id);
