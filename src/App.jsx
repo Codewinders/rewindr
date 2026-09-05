@@ -173,6 +173,7 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
     { id: "list", label: "Lägg upp" },
     ...(showMyListings ? [{ id: "myListings", label: "Mina annonser" }] : []),
     ...(showMyListings ? [{ id: "favorites", label: "Favoriter" }] : []),
+    ...(showMyListings ? [{ id: "shelf", label: "Min hylla" }] : []),
     { id: "mine", label: "Mina lån" },
     ...(showAdmin ? [{ id: "admin", label: "Admin" }] : []),
   ];
@@ -743,75 +744,99 @@ function TradeStatusBar({ thread, myName, onApprove, onReject, onComplete }) {
   );
 }
 
-// En titel som "står i hyllan" — visas först som en smal rygg, och vänder
-// sig (3D-flip) för att visa framsidan när man klickar, innan detaljvyn
-// öppnas. Ren visuell känsla, ingen extra data behövs.
-function ShelfItem({ item, onOpen, isFavorite, onToggleFavorite }) {
-  const [revealed, setRevealed] = useState(false);
+// ---------- shelf (hylla) ----------
+// En rygg som står tätt packad bredvid andra ryggar, precis som i en
+// riktig videobutik/samlarhylla. Klick "drar ut" den — den breddas och
+// visar omslaget innan detaljvyn öppnas.
+function ShelfSpine({ item, onOpen, isFavorite, onToggleFavorite }) {
+  const [pulled, setPulled] = useState(false);
   const color = GENRE_COLORS[item.genre] || "#21e6ec";
   const Icon = iconFor(item.type);
   const FormatIcon = formatIcon(item);
 
   const handleClick = () => {
-    if (revealed) { onOpen(item); return; }
-    setRevealed(true);
-    setTimeout(() => onOpen(item), 480);
+    if (pulled) { onOpen(item); return; }
+    setPulled(true);
+    setTimeout(() => onOpen(item), 420);
   };
 
   return (
-    <div className="rw-card rounded-xl overflow-hidden border" style={{ borderColor: "#33333a", background: "#1c1c20" }}>
-      <div
-        onClick={handleClick} role="button" tabIndex={0}
-        onKeyDown={(e) => { if (e.key === "Enter") handleClick(); }}
-        className="h-28 relative cursor-pointer"
-        style={{ perspective: "800px" }}>
-        <div
-          className="absolute inset-0 transition-transform duration-500"
-          style={{ transformStyle: "preserve-3d", transform: revealed ? "rotateY(180deg)" : "rotateY(0deg)" }}>
+    <div
+      onClick={handleClick} role="button" tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter") handleClick(); }}
+      className="relative cursor-pointer shrink-0 group"
+      style={{
+        width: pulled ? 128 : 34,
+        height: 168,
+        transition: "width 0.42s cubic-bezier(0.34, 1.2, 0.64, 1)",
+        transform: pulled ? "translateY(-10px)" : "translateY(0)",
+        zIndex: pulled ? 20 : 1,
+        filter: pulled ? "drop-shadow(0 12px 14px rgba(0,0,0,0.5))" : "none",
+      }}>
+      {/* Ryggens etikett — synlig hela tiden, tonas bort när utdragen */}
+      <div className="absolute inset-0 flex flex-col items-center justify-between py-3 overflow-hidden rounded-[2px]"
+        style={{ background: color, opacity: pulled ? 0 : 1, transition: "opacity 0.25s" }}>
+        <FormatIcon size={12} style={{ color: "#121214" }} />
+        <span className="text-[9px] uppercase tracking-wider text-center px-0.5" style={{ ...fontDisplay, color: "#121214", writingMode: "vertical-rl" }}>
+          {item.title.length > 22 ? item.title.slice(0, 22) + "…" : item.title}
+        </span>
+        <div className="w-3 h-3 rounded-full" style={{ background: "#12121466" }} />
+      </div>
 
-          {/* Ryggen — vad man ser innan man klickar */}
-          <div className="absolute inset-0 flex items-center justify-center" style={{ backfaceVisibility: "hidden", background: `linear-gradient(90deg, ${color}33, #121214 90%)` }}>
-            <div className="h-full flex flex-col items-center justify-center gap-2" style={{ width: 30, background: color, boxShadow: `0 0 10px ${color}88` }}>
-              <FormatIcon size={13} style={{ color: "#121214" }} />
-              <span className="text-[9px] uppercase tracking-wider" style={{ ...fontDisplay, color: "#121214", writingMode: "vertical-rl" }}>
-                {item.title.slice(0, 18)}
-              </span>
-            </div>
-          </div>
-
-          {/* Framsidan — visas efter vändningen */}
-          <div className="absolute inset-0 flex items-center justify-center overflow-hidden" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)", background: `linear-gradient(135deg, ${color}22, #121214 80%)` }}>
-            <div className="absolute left-0 top-0 bottom-0 w-1 z-10" style={{ background: color }} />
-            {item.imageUrl ? (
-              <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
-            ) : (
-              <Icon size={34} style={{ color }} />
-            )}
-          </div>
-        </div>
-
+      {/* Omslaget — tonas fram när utdragen */}
+      <div className="absolute inset-0 overflow-hidden rounded-[2px] flex items-center justify-center"
+        style={{ background: `linear-gradient(135deg, ${color}33, #121214 85%)`, opacity: pulled ? 1 : 0, transition: "opacity 0.25s 0.15s" }}>
+        <div className="absolute left-0 top-0 bottom-0 w-1" style={{ background: color }} />
+        {item.imageUrl ? (
+          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+        ) : (
+          <Icon size={30} style={{ color }} />
+        )}
         {onToggleFavorite && (
           <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id); }}
-            className="absolute top-2 left-2 z-10 rounded-full p-1.5" style={{ background: "rgba(10,6,18,0.75)" }}
-            title={isFavorite ? "Ta bort från favoriter" : "Lägg till i favoriter"}>
-            <Heart size={13} fill={isFavorite ? "#ff2fb0" : "none"} style={{ color: isFavorite ? "#ff2fb0" : "#fff" }} />
+            className="absolute top-1.5 left-1.5 rounded-full p-1" style={{ background: "rgba(10,6,18,0.75)" }}>
+            <Heart size={11} fill={isFavorite ? "#ff2fb0" : "none"} style={{ color: isFavorite ? "#ff2fb0" : "#fff" }} />
           </button>
         )}
-        {item.sold && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: "rgba(10,6,18,0.7)" }}>
-            <span className="px-3 py-1 rounded-full text-xs" style={{ ...fontDisplay, background: "#33333a", color: "#f3eefc" }}>SÅLD</span>
+        {pulled && (
+          <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1 text-[9px] truncate" style={{ background: "rgba(10,6,18,0.75)", color: "#f3eefc", ...fontBody }}>
+            {item.title}
           </div>
         )}
       </div>
-      <div className="p-3">
-        <h3 className="text-base leading-tight" style={{ ...fontDisplay, color: "#f3eefc" }}>{item.title}</h3>
-        <div className="flex items-center justify-between mt-2 text-xs" style={fontBody}>
-          <span style={{ color }}>{item.genre}{item.format ? ` · ${item.format}` : ""}</span>
-          <span style={{ color: "#ffe94a" }}>
-            {item.rentable ? `${item.price} kr/dag` : item.forSale && item.salePrice ? `${item.salePrice} kr` : item.forSale ? "Köp" : item.tradeable ? "Byte" : "I hyllan"}
-          </span>
+      {item.sold && (
+        <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(10,6,18,0.7)" }}>
+          <span className="text-[9px]" style={{ ...fontDisplay, color: "#f3eefc" }}>SÅLD</span>
         </div>
+      )}
+      {!pulled && (
+        <div className="absolute inset-0 rounded-[2px] transition-opacity opacity-0 group-hover:opacity-100" style={{ background: "#ffffff12" }} />
+      )}
+    </div>
+  );
+}
+
+// Hela hyllan — täta ryggar som står på en hyllkant, precis som i en
+// riktig videobutik. Radbryter naturligt om man har många titlar.
+function Shelf({ items, onOpen, favorites, onToggleFavorite }) {
+  if (items.length === 0) {
+    return (
+      <div className="text-center py-14 text-xs" style={{ color: "#6d5d8a", ...fontBody }}>
+        <Sparkles className="mx-auto mb-3" size={26} />
+        Hyllan är tom — lägg upp en titel och kryssa i "Bara i min hylla".
       </div>
+    );
+  }
+  return (
+    <div className="rounded-xl p-6 pb-0 overflow-x-auto" style={{ background: "linear-gradient(180deg, #1c1c20 0%, #16161a 100%)", border: "1px solid #33333a" }}>
+      <div className="flex items-end gap-[3px] flex-wrap pb-0">
+        {items.map((item) => (
+          <ShelfSpine key={item.id} item={item} onOpen={onOpen} isFavorite={favorites.includes(item.id)} onToggleFavorite={onToggleFavorite} />
+        ))}
+      </div>
+      {/* Hyllkanten */}
+      <div className="h-4 mt-0 rounded-b-md" style={{ background: "linear-gradient(180deg, #3a2a1a, #1c130a)", boxShadow: "0 6px 10px rgba(0,0,0,0.4)" }} />
+      <div className="h-6" />
     </div>
   );
 }
@@ -1435,28 +1460,46 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
       )}
 
       <div>
-        <label className="text-xs" style={{ color: "#8a7aa8" }}>Vad erbjuds?</label>
-        <div className="mt-1.5 space-y-2">
-          <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#c9b8e0" }}>
-            <input type="checkbox" checked={rentable} onChange={(e) => setRentable(e.target.checked)} />
-            Hyra ut (pris per dag)
-          </label>
-          <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#c9b8e0" }}>
-            <input type="checkbox" checked={forSale} onChange={(e) => setForSale(e.target.checked)} />
-            Till försäljning (köpa loss)
-          </label>
-          <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#c9b8e0" }}>
-            <input type="checkbox" checked={tradeable} onChange={(e) => setTradeable(e.target.checked)} />
-            Öppen för byte — lägre avgift ({TRADE_FEE_PCT}% mot {RENT_FEE_PCT}% för hyra)
-          </label>
-          <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#c9b8e0" }}>
-            <input type="checkbox" checked={shelfOnly} onChange={(e) => setShelfOnly(e.target.checked)} />
-            Bara visa i min hylla (ingen hyra, köp eller byte — folk kan ändå fråga om att köpa loss)
-          </label>
+        <label className="text-xs" style={{ color: "#8a7aa8" }}>Vad vill du göra med titeln?</label>
+        <div className="mt-1.5 grid grid-cols-2 gap-2">
+          <button type="button" onClick={() => setShelfOnly(false)}
+            className="py-2 rounded-md text-xs"
+            style={{ background: !shelfOnly ? "#21e6ec22" : "transparent", border: `1px solid ${!shelfOnly ? "#21e6ec" : "#33333a"}`, color: !shelfOnly ? "#21e6ec" : "#8a7aa8" }}>
+            Erbjuda på marknaden
+          </button>
+          <button type="button" onClick={() => { setShelfOnly(true); setRentable(false); setForSale(false); setTradeable(false); }}
+            className="py-2 rounded-md text-xs"
+            style={{ background: shelfOnly ? "#8b5cf622" : "transparent", border: `1px solid ${shelfOnly ? "#8b5cf6" : "#33333a"}`, color: shelfOnly ? "#8b5cf6" : "#8a7aa8" }}>
+            Bara i min hylla
+          </button>
         </div>
+        {shelfOnly && (
+          <p className="text-[11px] mt-2" style={{ color: "#6d5d8a" }}>
+            Titeln visas bara som prydnad på din profilhylla — ingen hyra, köp eller byte. Andra kan fortfarande fråga om att köpa loss den.
+          </p>
+        )}
       </div>
 
-      {rentable && (
+      {!shelfOnly && (
+        <div>
+          <div className="mt-1.5 space-y-2">
+            <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#c9b8e0" }}>
+              <input type="checkbox" checked={rentable} onChange={(e) => setRentable(e.target.checked)} />
+              Hyra ut (pris per dag)
+            </label>
+            <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#c9b8e0" }}>
+              <input type="checkbox" checked={forSale} onChange={(e) => setForSale(e.target.checked)} />
+              Till försäljning (köpa loss)
+            </label>
+            <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#c9b8e0" }}>
+              <input type="checkbox" checked={tradeable} onChange={(e) => setTradeable(e.target.checked)} />
+              Öppen för byte — lägre avgift ({TRADE_FEE_PCT}% mot {RENT_FEE_PCT}% för hyra)
+            </label>
+          </div>
+        </div>
+      )}
+
+      {rentable && !shelfOnly && (
         <div>
           <label className="text-xs" style={{ color: "#8a7aa8" }}>Pris per dag (kr)</label>
           <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)}
@@ -1487,15 +1530,17 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
         <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2}
           className="w-full mt-1 px-3 py-2 rounded-md outline-none resize-none" style={inputStyle} placeholder="t.ex. VHS, lite repig men spelbar" />
       </div>
-      <div>
-        <label className="text-xs" style={{ color: "#8a7aa8" }}>Leverans</label>
-        <select value={delivery} onChange={(e) => setDelivery(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md outline-none" style={inputStyle}>
-          <option value="pickup">Endast hämtning</option>
-          <option value="ship">Endast frakt</option>
-          <option value="both">Hämtning eller frakt</option>
-        </select>
-      </div>
-      {delivery !== "pickup" && (
+      {!shelfOnly && (
+        <div>
+          <label className="text-xs" style={{ color: "#8a7aa8" }}>Leverans</label>
+          <select value={delivery} onChange={(e) => setDelivery(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md outline-none" style={inputStyle}>
+            <option value="pickup">Endast hämtning</option>
+            <option value="ship">Endast frakt</option>
+            <option value="both">Hämtning eller frakt</option>
+          </select>
+        </div>
+      )}
+      {delivery !== "pickup" && !shelfOnly && (
         <div>
           <label className="text-xs" style={{ color: "#8a7aa8" }}>Fraktpris (kr)</label>
           <input type="number" min="0" value={shippingPrice} onChange={(e) => setShippingPrice(e.target.value)}
@@ -1803,12 +1848,14 @@ function ProfilePage({ username, onBack, listings, rentals, purchases, reviews, 
         ))}
       </div>
 
-      {theirItems.length === 0 ? (
+      {profileFilter === "shelf" ? (
+        <Shelf items={theirItems} onOpen={onOpenItem} favorites={favorites} onToggleFavorite={onToggleFavorite} />
+      ) : theirItems.length === 0 ? (
         <div className="text-center py-8 text-xs" style={{ color: "#6d5d8a", ...fontBody }}>Inga annonser i den här kategorin.</div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
           {theirItems.map((item) => (
-            <ShelfItem key={item.id} item={item} onOpen={onOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={onToggleFavorite} />
+            <Cassette key={item.id} item={item} onOpen={onOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={onToggleFavorite} />
           ))}
         </div>
       )}
@@ -2013,6 +2060,7 @@ function RewindrAppInner() {
 
   const filtered = listings.filter((i) => {
     if (i.sold) return false; // sålda titlar försvinner permanent från Bläddra
+    if (i.shelfOnly) return false; // rena hylltitlar visas bara på profilens hylla, inte i Bläddra
     const typeOk = filter === "all" || i.type === filter;
     const offerOk =
       offerFilter === "all" ||
@@ -2255,6 +2303,24 @@ function RewindrAppInner() {
                 })()
               ) : (
                 <div className="text-xs rounded-lg p-4 max-w-sm" style={{ background: "#21e6ec15", color: "#c9b8e0", ...fontBody }}>Logga in högst upp för att se dina favoriter.</div>
+              )
+            )}
+            {tab === "shelf" && (
+              name ? (
+                <div>
+                  <h2 className="text-2xl mb-4" style={{ ...fontDisplay, color: "#ffe94a" }}>Min hylla</h2>
+                  <Shelf
+                    items={listings.filter((l) => l.owner === name && l.shelfOnly && !l.sold)}
+                    onOpen={setOpenItem}
+                    favorites={favorites}
+                    onToggleFavorite={toggleFavorite}
+                  />
+                  <p className="text-[11px] mt-3" style={{ color: "#6d5d8a", ...fontBody }}>
+                    Andra kan se din hylla på din profil. Lägg till fler titlar under "Lägg upp" → "Bara i min hylla".
+                  </p>
+                </div>
+              ) : (
+                <div className="text-xs rounded-lg p-4 max-w-sm" style={{ background: "#21e6ec15", color: "#c9b8e0", ...fontBody }}>Logga in högst upp för att se din hylla.</div>
               )
             )}
             {tab === "mine" && (
