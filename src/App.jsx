@@ -1915,7 +1915,7 @@ function RewindrAppInner() {
           </div>
         )}
         <AuthPanel name={name} accounts={accounts} onAuthChange={handleAuthChange} />
-        <Marquee query={query} setQuery={setQuery} />
+        {!viewingProfile && <Marquee query={query} setQuery={setQuery} />}
         <Tabs active={tab} setActive={(id) => { setEditingItem(null); setViewingProfile(null); setTab(id); }} showAdmin={isAdmin} showMyListings={!!name} />
 
         {!ready ? (
