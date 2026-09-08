@@ -124,7 +124,8 @@ function GlobalStyle() {
   return (
     <style>{`
       @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600&display=swap');
-      html { font-size: 18px; }
+      html { font-size: clamp(15px, 4vw, 18px); }
+      * { -webkit-tap-highlight-color: transparent; }
       .rw-card { transition: transform 0.2s ease, border-color 0.2s ease; }
       .rw-card:hover { transform: translateY(-3px); }
       @keyframes rwSlideIn {
@@ -132,6 +133,8 @@ function GlobalStyle() {
         to { opacity: 1; transform: translateY(0); }
       }
       .rw-slide-in { animation: rwSlideIn 0.25s ease; }
+      .rw-no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
+      .rw-no-scrollbar::-webkit-scrollbar { display: none; }
     `}</style>
   );
 }
@@ -178,10 +181,11 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
     ...(showAdmin ? [{ id: "admin", label: "Admin" }] : []),
   ];
   return (
-    <div className="flex gap-1.5 mb-8 flex-wrap justify-center p-1.5 rounded-xl" style={{ ...fontDisplay, background: "#1c1c20", border: "1px solid #33333a66" }}>
+    <div className="flex gap-1.5 mb-8 justify-center p-1.5 rounded-xl overflow-x-auto rw-no-scrollbar sm:flex-wrap"
+      style={{ ...fontDisplay, background: "#1c1c20", border: "1px solid #33333a66" }}>
       {tabs.map((t) => (
         <button key={t.id} onClick={() => setActive(t.id)}
-          className="px-5 py-2.5 text-base rounded-lg transition-colors flex items-center gap-2"
+          className="px-4 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base rounded-lg transition-colors flex items-center gap-1.5 sm:gap-2 shrink-0"
           style={{
             letterSpacing: "0.04em",
             color: active === t.id ? "#121214" : "#a99bc4",
@@ -241,7 +245,7 @@ function AuthPanel({ name, accounts, myCredits, onAuthChange }) {
     const acc = accounts[name];
     return (
       <div className="mb-4">
-        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border flex-wrap" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
+        <div className="flex items-center justify-between gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl border flex-wrap" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
           <div className="flex items-center gap-2 text-sm flex-wrap" style={{ color: "#f3eefc" }}>
             <User size={15} style={{ color: "#21e6ec" }} />
             Inloggad som <strong>{name}</strong>
@@ -854,8 +858,8 @@ function ShelfSpine({ item, onOpen, isFavorite, onToggleFavorite }) {
       onKeyDown={(e) => { if (e.key === "Enter") toggle(); }}
       className="relative cursor-pointer shrink-0 group"
       style={{
-        width: pulled ? 168 : 46,
-        height: 220,
+        width: pulled ? "clamp(120px, 32vw, 168px)" : "clamp(32px, 9vw, 46px)",
+        height: "clamp(160px, 42vw, 220px)",
         transition: "width 0.42s cubic-bezier(0.34, 1.2, 0.64, 1)",
         transform: pulled ? "translateY(-14px)" : "translateY(0)",
         zIndex: pulled ? 20 : 1,
@@ -956,7 +960,7 @@ function Shelf({ items, onOpen, favorites, onToggleFavorite }) {
   const games = items.filter((i) => i.type === "game");
 
   return (
-    <div className="rounded-xl p-6 pt-8 overflow-x-auto relative" style={{
+    <div className="rounded-xl p-3 pt-6 sm:p-6 sm:pt-8 overflow-x-auto relative" style={{
       background: "radial-gradient(ellipse at 50% 0%, #3a2a1a55 0%, #241a12 45%, #17110c 100%)",
       border: "1px solid #4a3220",
       boxShadow: "inset 0 0 60px rgba(0,0,0,0.4)",
@@ -2005,7 +2009,7 @@ function ProfilePage({ username, onBack, listings, rentals, purchases, reviews, 
       ) : theirItems.length === 0 ? (
         <div className="text-center py-8 text-xs" style={{ color: "#6d5d8a", ...fontBody }}>Inga annonser i den här kategorin.</div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-8">
           {theirItems.map((item) => (
             <Cassette key={item.id} item={item} onOpen={onOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={onToggleFavorite} />
           ))}
@@ -2338,7 +2342,7 @@ function RewindrAppInner() {
   return (
     <div className="min-h-screen w-full" style={{ background: "#121214" }}>
       <GlobalStyle />
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-3 py-5 sm:px-4 sm:py-8">
         {lastError && (
           <div className="mb-4 rounded-xl border p-3 text-xs flex items-center justify-between gap-2" style={{ borderColor: "#ff8a8a66", background: "#ff8a8a15", color: "#ff8a8a", ...fontBody }}>
             <span>{lastError}</span>
@@ -2416,7 +2420,7 @@ function RewindrAppInner() {
                     )}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
                     {filtered.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={name ? toggleFavorite : undefined} />)}
                   </div>
                 )}
@@ -2444,7 +2448,7 @@ function RewindrAppInner() {
                     Du har inte lagt upp något än — gå till "Lägg upp" för att komma igång.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
                     {myItems.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={name ? toggleFavorite : undefined} />)}
                   </div>
                 )
@@ -2462,7 +2466,7 @@ function RewindrAppInner() {
                       Inga favoriter än — klicka på hjärtat på en annons för att spara den här.
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
                       {favItems.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} isFavorite={true} onToggleFavorite={toggleFavorite} />)}
                     </div>
                   );
