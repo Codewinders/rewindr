@@ -177,6 +177,7 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
     ...(showMyListings ? [{ id: "myListings", label: "Mina annonser" }] : []),
     ...(showMyListings ? [{ id: "favorites", label: "Favoriter" }] : []),
     ...(showMyListings ? [{ id: "shelf", label: "Min hylla" }] : []),
+    ...(showMyListings ? [{ id: "messages", label: "Bud & byten" }] : []),
     { id: "mine", label: "Mina lån" },
     ...(showAdmin ? [{ id: "admin", label: "Admin" }] : []),
   ];
@@ -1815,6 +1816,99 @@ function WantedAdCard({ ad, name, onDelete, onRespond }) {
   );
 }
 
+// ---------- messages (bud & byten) ----------
+function MessageCard({ thread, name, listing, onApproveTrade, onRejectTrade, onCompleteTrade, onAcceptOffer, onRejectOffer, onCounterOffer, onPayOffer, onReply, onOpenProfile }) {
+  const [open, setOpen] = useState(false);
+  const isOwner = thread.owner === name;
+  const otherParty = isOwner ? thread.buyerName : thread.owner;
+
+  const needsMe =
+    (thread.kind === "buy" && thread.offerStatus === "pending" &&
+      ((isOwner && thread.offerTurn === "owner") || (!isOwner && thread.offerTurn === "buyer"))) ||
+    (thread.kind === "trade" && thread.status === "pending" && isOwner) ||
+    (thread.kind === "trade" && thread.status === "approved" &&
+      !(isOwner ? thread.ownerConfirmed : thread.buyerConfirmed));
+
+  const color = thread.kind === "trade" ? "#8b5cf6" : "#4ade80";
+  const Icon = listing ? iconFor(listing.type) : Tag;
+
+  return (
+    <div className="rounded-xl border overflow-hidden" style={{ borderColor: needsMe ? color : "#33333a", background: "#1c1c20" }}>
+      <button onClick={() => setOpen((v) => !v)} className="w-full flex items-center gap-3 p-3 text-left">
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}22` }}>
+          <Icon size={18} style={{ color }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm truncate" style={{ ...fontDisplay, color: "#f3eefc" }}>{thread.itemTitle || "(borttagen titel)"}</div>
+          <div className="text-[11px] flex items-center gap-1.5 flex-wrap" style={{ color: "#8a7aa8", ...fontBody }}>
+            {thread.kind === "trade" ? <Repeat size={11} /> : <Tag size={11} />}
+            <UserLink username={otherParty} onOpen={onOpenProfile} style={{ color: "#8a7aa8" }} />
+            {thread.kind === "buy" && <span>· {thread.offerAmount} kr</span>}
+          </div>
+        </div>
+        {needsMe && <span className="text-[10px] px-2 py-0.5 rounded-full shrink-0" style={{ background: color + "22", color, ...fontDisplay }}>DIN TUR</span>}
+      </button>
+      {open && (
+        <div className="px-3 pb-3">
+          {thread.kind === "trade" && (
+            <>
+              <TradeStatusBar thread={thread} myName={name} onApprove={onApproveTrade} onReject={onRejectTrade} onComplete={onCompleteTrade} />
+              <ChatThread thread={thread} myName={name} onReply={onReply} />
+            </>
+          )}
+          {thread.kind === "buy" && (
+            <OfferBar thread={thread} myName={name} item={listing} onAccept={onAcceptOffer} onReject={onRejectOffer} onCounter={onCounterOffer} onPay={onPayOffer} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MessagesPanel({ threads, name, listings, ...handlers }) {
+  const [filter, setFilter] = useState("active");
+  const mine = threads.filter((t) => t.owner === name || t.buyerName === name);
+
+  const isDone = (t) => t.kind === "trade" ? (t.status === "completed" || t.status === "rejected") : (t.offerStatus === "accepted" || t.offerStatus === "rejected");
+  const visible = filter === "active" ? mine.filter((t) => !isDone(t)) : mine;
+
+  if (mine.length === 0) {
+    return (
+      <div className="text-center py-16 max-w-2xl mx-auto" style={{ ...fontBody, color: "#6d5d8a" }}>
+        <Inbox className="mx-auto mb-3" size={28} />
+        Inga bud eller bytesförslag än.
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <div className="flex gap-2 mb-4" style={fontBody}>
+        {[["active", "Aktiva"], ["all", "Alla"]].map(([id, label]) => (
+          <button key={id} onClick={() => setFilter(id)}
+            className="px-3 py-1.5 rounded-full text-xs border"
+            style={{
+              borderColor: filter === id ? "#ffe94a" : "#33333a",
+              color: filter === id ? "#ffe94a" : "#8a7aa8",
+              background: filter === id ? "#ffe94a1a" : "transparent",
+            }}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {visible.length === 0 ? (
+        <div className="text-center py-10 text-xs" style={{ color: "#6d5d8a", ...fontBody }}>Inga aktiva just nu.</div>
+      ) : (
+        <div className="space-y-2">
+          {visible.map((t) => (
+            <MessageCard key={t.id} thread={t} name={name} listing={listings.find((l) => l.id === t.itemId)} {...handlers} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function WantedAdsPanel({ ads, name, onAdd, onDelete, onRespond }) {
   const [title, setTitle] = useState("");
   const [note, setNote] = useState("");
@@ -2491,6 +2585,26 @@ function RewindrAppInner() {
                 </div>
               ) : (
                 <div className="text-xs rounded-lg p-4 max-w-sm" style={{ background: "#21e6ec15", color: "#c9b8e0", ...fontBody }}>Logga in högst upp för att se din hylla.</div>
+              )
+            )}
+            {tab === "messages" && (
+              name ? (
+                <MessagesPanel
+                  threads={threads}
+                  name={name}
+                  listings={listings}
+                  onApproveTrade={handleApproveTrade}
+                  onRejectTrade={handleRejectTrade}
+                  onCompleteTrade={handleCompleteTrade}
+                  onAcceptOffer={handleAcceptOffer}
+                  onRejectOffer={handleRejectOffer}
+                  onCounterOffer={handleCounterOffer}
+                  onPayOffer={handlePayOffer}
+                  onReply={handleReply}
+                  onOpenProfile={setViewingProfile}
+                />
+              ) : (
+                <div className="text-xs rounded-lg p-4 max-w-sm" style={{ background: "#21e6ec15", color: "#c9b8e0", ...fontBody }}>Logga in högst upp för att se dina bud och byten.</div>
               )
             )}
             {tab === "mine" && (
