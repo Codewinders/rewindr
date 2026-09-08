@@ -68,6 +68,7 @@ export const api = {
   deleteListing: (id) => request("DELETE", `/api/listings/${id}`),
   updateListing: (id, listing) => request("PATCH", `/api/listings/${id}`, listing),
   uploadImage: (file) => uploadFile("/api/upload", file),
+  lookupBarcode: (upc) => request("GET", `/api/barcode?upc=${encodeURIComponent(upc)}`),
 
   // rentals
   rentals: () => request("GET", "/api/rentals"),

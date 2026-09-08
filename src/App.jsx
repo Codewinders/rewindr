@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "./api.js";
-import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard, Disc, Heart, Award, MoreVertical } from "lucide-react";
+import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard, Disc, Heart, Award, MoreVertical, Camera } from "lucide-react";
 
 const FORMATS = ["VHS", "DVD", "Blu-ray", "4K Blu-ray"];
 const FORMAT_PRICE_HINT = {
@@ -1452,6 +1452,109 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpen
 }
 
 // ---------- list form ----------
+// ---------- barcode scanner ----------
+// Gissar typ/format/plattform utifrån titel + kategori som streckkods-
+// uppslaget gav — bästa möjliga automatiska ifyllning, användaren kan
+// alltid ändra det själv om gissningen blir fel.
+function guessFromBarcodeResult(title, category) {
+  const text = `${title || ""} ${category || ""}`.toLowerCase();
+  let type = null;
+  if (/video game|nintendo|playstation|xbox|\bps[2345]\b|\bswitch\b/.test(text)) type = "game";
+  else if (/movie|film|dvd|blu-?ray|vhs/.test(text)) type = "movie";
+
+  let format = null;
+  if (/4k|ultra hd|\buhd\b/.test(text)) format = "4K Blu-ray";
+  else if (/blu-?ray/.test(text)) format = "Blu-ray";
+  else if (/\bdvd\b/.test(text)) format = "DVD";
+  else if (/\bvhs\b/.test(text)) format = "VHS";
+
+  let platform = null;
+  if (/switch 2/.test(text)) platform = "Nintendo Switch 2";
+  else if (/switch/.test(text)) platform = "Nintendo Switch";
+  else if (/ps5|playstation 5/.test(text)) platform = "PlayStation 5";
+  else if (/ps4|playstation 4/.test(text)) platform = "PlayStation 4";
+  else if (/xbox series/.test(text)) platform = "Xbox Series X";
+  else if (/xbox one/.test(text)) platform = "Xbox One";
+
+  return { type, format: type === "game" ? platform : format };
+}
+
+function BarcodeScanner({ onResult, onClose }) {
+  const videoRef = useRef(null);
+  const [manualCode, setManualCode] = useState("");
+  const [supported] = useState(typeof window !== "undefined" && "BarcodeDetector" in window);
+  const [cameraError, setCameraError] = useState("");
+
+  useEffect(() => {
+    if (!supported) return;
+    let stream;
+    let stopped = false;
+
+    (async () => {
+      try {
+        const detector = new window.BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e"] });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        if (stopped) { stream.getTracks().forEach((t) => t.stop()); return; }
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+        const tick = async () => {
+          if (stopped || !videoRef.current) return;
+          try {
+            const codes = await detector.detect(videoRef.current);
+            if (codes.length > 0) { onResult(codes[0].rawValue); return; }
+          } catch { /* enstaka misslyckade bildrutor är normalt, fortsätt */ }
+          requestAnimationFrame(tick);
+        };
+        tick();
+      } catch (err) {
+        setCameraError("Kunde inte starta kameran — kolla att du gett appen tillstånd, eller skriv in koden manuellt nedan.");
+      }
+    })();
+
+    return () => {
+      stopped = true;
+      if (stream) stream.getTracks().forEach((t) => t.stop());
+    };
+  }, [supported, onResult]);
+
+  const submitManual = () => {
+    const code = manualCode.replace(/\D/g, "");
+    if (code) onResult(code);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" style={{ background: "rgba(5,2,12,0.9)" }} onClick={onClose}>
+      <div className="w-full max-w-sm rounded-2xl border p-4" style={{ borderColor: "#33333a", background: "#1c1c20" }} onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg" style={{ ...fontDisplay, color: "#ffe94a" }}>Skanna streckkod</h3>
+          <button onClick={onClose} style={{ color: "#8a7aa8" }}><X size={20} /></button>
+        </div>
+
+        {supported && !cameraError ? (
+          <div className="rounded-lg overflow-hidden mb-3 relative" style={{ background: "#121214" }}>
+            <video ref={videoRef} className="w-full h-56 object-cover" muted playsInline />
+            <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-0.5" style={{ background: "#ff2fb0", boxShadow: "0 0 8px #ff2fb0" }} />
+          </div>
+        ) : (
+          <p className="text-xs mb-3" style={{ color: "#8a7aa8" }}>
+            {cameraError || "Din webbläsare stödjer inte kameraskanning direkt (vanligt på iPhone) — skriv in streckkoden manuellt istället, den står oftast tryckt under strecken."}
+          </p>
+        )}
+
+        <div className="flex gap-2">
+          <input value={manualCode} onChange={(e) => setManualCode(e.target.value)} placeholder="Streckkodens siffror"
+            inputMode="numeric"
+            onKeyDown={(e) => { if (e.key === "Enter") submitManual(); }}
+            className="flex-1 px-3 py-2 rounded-md outline-none text-sm" style={{ background: "#121214", border: "1px solid #33333a", color: "#f3eefc" }} />
+          <button onClick={submitManual} className="px-3 rounded-md text-xs" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay }}>SÖK</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
   const [title, setTitle] = useState(editingItem?.title || "");
   const [type, setType] = useState(editingItem?.type || "movie");
@@ -1471,6 +1574,10 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
   const [imagePreview, setImagePreview] = useState(editingItem?.imageUrl || null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanBusy, setScanBusy] = useState(false);
+  const [scanError, setScanError] = useState("");
+  const [scanFoundTitle, setScanFoundTitle] = useState("");
 
   useEffect(() => { if (type === "game" && !PLATFORMS.includes(format)) setFormat(PLATFORMS[0]); if (type === "movie" && !FORMATS.includes(format)) setFormat(FORMATS[1]); }, [type]);
 
@@ -1512,6 +1619,29 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
       setImagePreview(null);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleBarcodeResult = async (code) => {
+    setScannerOpen(false);
+    setScanBusy(true);
+    setScanError("");
+    setScanFoundTitle("");
+    try {
+      const data = await api.lookupBarcode(code);
+      if (data.found) {
+        if (data.title) { setTitle(data.title); setScanFoundTitle(data.title); }
+        const guess = guessFromBarcodeResult(data.title, data.category);
+        if (guess.type) setType(guess.type);
+        if (guess.format) setFormat(guess.format);
+        if (!data.title) setScanError("Hittade streckkoden men ingen titel — fyll i manuellt.");
+      } else {
+        setScanError("Ingen träff för den streckkoden — fyll i uppgifterna manuellt.");
+      }
+    } catch (err) {
+      setScanError(err.message || "Kunde inte slå upp streckkoden.");
+    } finally {
+      setScanBusy(false);
     }
   };
 
@@ -1585,6 +1715,17 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
         )}
         {uploadError && <p className="text-[11px] mt-1" style={{ color: "#ff8a8a" }}>{uploadError}</p>}
       </div>
+
+      <button type="button" onClick={() => { setScannerOpen(true); setScanError(""); }} disabled={scanBusy}
+        className="w-full flex items-center justify-center gap-2 py-2 rounded-md text-xs disabled:opacity-50"
+        style={{ background: "transparent", border: "1px solid #ff2fb066", color: "#ff2fb0" }}>
+        <Camera size={14} /> {scanBusy ? "Slår upp…" : "Skanna streckkod (fyller i åt dig)"}
+      </button>
+      {scanFoundTitle && !scanError && (
+        <p className="text-[11px]" style={{ color: "#4ade80" }}>Hittade: {scanFoundTitle} — dubbelkolla att allt stämmer nedan.</p>
+      )}
+      {scanError && <p className="text-[11px]" style={{ color: "#ff8a8a" }}>{scanError}</p>}
+      {scannerOpen && <BarcodeScanner onResult={handleBarcodeResult} onClose={() => setScannerOpen(false)} />}
 
       <div>
         <label className="text-xs" style={{ color: "#8a7aa8" }}>Titel</label>
