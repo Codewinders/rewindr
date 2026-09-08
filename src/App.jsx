@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { api } from "./api.js";
-import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, MessageCircle, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard, Disc, Heart, Award, MoreVertical } from "lucide-react";
+import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard, Disc, Heart, Award, MoreVertical } from "lucide-react";
 
 const FORMATS = ["VHS", "DVD", "Blu-ray", "4K Blu-ray"];
 const FORMAT_PRICE_HINT = {
@@ -744,6 +744,98 @@ function TradeStatusBar({ thread, myName, onApprove, onReject, onComplete }) {
   );
 }
 
+// Bud-loop för köpförfrågningar — bara siffror och knappar, ingen fri
+// text, så affären aldrig behöver lämna sajten för att göra upp om pris.
+function OfferBar({ thread, myName, onAccept, onReject, onCounter, onPay, item }) {
+  const [countering, setCountering] = useState(false);
+  const [counterAmount, setCounterAmount] = useState(thread.offerAmount || "");
+  const [paying, setPaying] = useState(false);
+  const [deliveryChoice, setDeliveryChoice] = useState(item?.delivery === "ship" ? "ship" : "pickup");
+
+  const isOwner = thread.owner === myName;
+  const isBuyer = thread.buyerName === myName;
+  const myTurn = (isOwner && thread.offerTurn === "owner") || (isBuyer && thread.offerTurn === "buyer");
+
+  const statusLabel = {
+    pending: myTurn ? "Din tur att svara" : "Väntar på svar",
+    accepted: "Accepterat!",
+    rejected: "Nekat",
+  }[thread.offerStatus];
+  const statusColor = { pending: "#ffe94a", accepted: "#4ade80", rejected: "#ff8a8a" }[thread.offerStatus];
+
+  const submitCounter = () => {
+    const amt = Math.round(Number(counterAmount) || 0);
+    if (amt <= 0) return;
+    onCounter(thread.id, amt);
+    setCountering(false);
+  };
+
+  return (
+    <div className="rounded-lg p-3 mb-2 text-xs" style={{ background: statusColor + "15", border: `1px solid ${statusColor}44`, ...fontBody }}>
+      <div className="flex items-center justify-between mb-2">
+        <span style={{ color: statusColor }}>{statusLabel}</span>
+        <span className="text-sm" style={{ ...fontDisplay, color: "#f3eefc" }}>{thread.offerAmount} kr</span>
+      </div>
+
+      {thread.offerStatus === "pending" && myTurn && !countering && (
+        <div className="flex gap-2">
+          <button onClick={() => onAccept(thread.id)} className="flex-1 py-1.5 rounded-md" style={{ background: "#4ade80", color: "#121214", ...fontDisplay, fontSize: "13px" }}>
+            ACCEPTERA
+          </button>
+          <button onClick={() => setCountering(true)} className="flex-1 py-1.5 rounded-md" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay, fontSize: "13px" }}>
+            MOTBJUD
+          </button>
+          <button onClick={() => onReject(thread.id)} className="flex-1 py-1.5 rounded-md" style={{ background: "#33333a", color: "#ff8a8a", ...fontDisplay, fontSize: "13px" }}>
+            NEKA
+          </button>
+        </div>
+      )}
+      {thread.offerStatus === "pending" && myTurn && countering && (
+        <div className="flex gap-2">
+          <input type="number" min="1" value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)}
+            className="flex-1 px-2 py-1.5 rounded-md outline-none text-sm" style={{ background: "#121214", border: "1px solid #33333a", color: "#f3eefc" }} />
+          <button onClick={submitCounter} className="px-3 rounded-md" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay, fontSize: "13px" }}>SKICKA</button>
+          <button onClick={() => setCountering(false)} className="px-3 rounded-md" style={{ background: "#33333a", color: "#8a7aa8" }}>✕</button>
+        </div>
+      )}
+      {thread.offerStatus === "pending" && !myTurn && (
+        <p style={{ color: "#8a7aa8" }}>Väntar på svar från {isOwner ? thread.buyerName : thread.owner}.</p>
+      )}
+
+      {thread.offerStatus === "accepted" && isBuyer && (
+        paying ? (
+          <div className="space-y-2">
+            {item?.delivery === "both" && (
+              <div className="flex gap-2">
+                <button onClick={() => setDeliveryChoice("pickup")}
+                  className="flex-1 py-1.5 rounded-md text-[11px]"
+                  style={{ background: deliveryChoice === "pickup" ? "#4ade8022" : "transparent", border: `1px solid ${deliveryChoice === "pickup" ? "#4ade80" : "#33333a"}`, color: deliveryChoice === "pickup" ? "#4ade80" : "#8a7aa8" }}>
+                  Hämta
+                </button>
+                <button onClick={() => setDeliveryChoice("ship")}
+                  className="flex-1 py-1.5 rounded-md text-[11px]"
+                  style={{ background: deliveryChoice === "ship" ? "#4ade8022" : "transparent", border: `1px solid ${deliveryChoice === "ship" ? "#4ade80" : "#33333a"}`, color: deliveryChoice === "ship" ? "#4ade80" : "#8a7aa8" }}>
+                  Skicka
+                </button>
+              </div>
+            )}
+            <button onClick={() => onPay(thread.id, deliveryChoice)} className="w-full py-1.5 rounded-md" style={{ background: "#4ade80", color: "#121214", ...fontDisplay, fontSize: "13px" }}>
+              BETALA {thread.offerAmount} KR
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setPaying(true)} className="w-full py-1.5 rounded-md" style={{ background: "#4ade80", color: "#121214", ...fontDisplay, fontSize: "13px" }}>
+            GÅ TILL BETALNING
+          </button>
+        )
+      )}
+      {thread.offerStatus === "accepted" && isOwner && (
+        <p style={{ color: "#8a7aa8" }}>Väntar på att {thread.buyerName} slutför betalningen.</p>
+      )}
+    </div>
+  );
+}
+
 // ---------- shelf (hylla) ----------
 // En rygg som står tätt packad bredvid andra ryggar, precis som i en
 // riktig videobutik/samlarhylla. Klick "drar ut" den — den breddas och
@@ -1162,12 +1254,12 @@ function TradeFlow({ item, myItems, onPropose }) {
   );
 }
 
-function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpenProfile, alreadyRented, activeRental, onReturnRental, isOwner, name, threads, onStartThread, onReply, onApproveTrade, onRejectTrade, onCompleteTrade, myItems, onProposeTrade, reviews, onAddReview, accounts }) {
+function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpenProfile, alreadyRented, activeRental, onReturnRental, isOwner, name, threads, onStartThread, onReply, onApproveTrade, onRejectTrade, onCompleteTrade, onAcceptOffer, onRejectOffer, onCounterOffer, onPayOffer, myItems, onProposeTrade, reviews, onAddReview, accounts }) {
   const [askOpen, setAskOpen] = useState(false);
-  const [message, setMessage] = useState("");
+  const [offerAmount, setOfferAmount] = useState("");
   const [openThreadId, setOpenThreadId] = useState(null);
 
-  useEffect(() => { setAskOpen(false); setMessage(""); setOpenThreadId(null); }, [item]);
+  useEffect(() => { setAskOpen(false); setOfferAmount(""); setOpenThreadId(null); }, [item]);
 
   if (!item) return null;
   const color = GENRE_COLORS[item.genre] || "#21e6ec";
@@ -1179,8 +1271,9 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpen
 
   const submitAsk = (e) => {
     e.preventDefault();
-    if (!name || !message.trim()) return;
-    onStartThread(item, name, message.trim());
+    const amt = Math.round(Number(offerAmount) || 0);
+    if (!name || amt <= 0) return;
+    onStartThread(item, name, amt);
   };
 
   return (
@@ -1274,9 +1367,14 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpen
                         {openThreadId === t.id && (
                           <div className="mt-2">
                             {t.kind === "trade" && (
-                              <TradeStatusBar thread={t} myName={item.owner} onApprove={onApproveTrade} onReject={onRejectTrade} onComplete={onCompleteTrade} />
+                              <>
+                                <TradeStatusBar thread={t} myName={item.owner} onApprove={onApproveTrade} onReject={onRejectTrade} onComplete={onCompleteTrade} />
+                                <ChatThread thread={t} myName={item.owner} onReply={onReply} />
+                              </>
                             )}
-                            <ChatThread thread={t} myName={item.owner} onReply={onReply} />
+                            {t.kind === "buy" && (
+                              <OfferBar thread={t} myName={item.owner} item={item} onAccept={onAcceptOffer} onReject={onRejectOffer} onCounter={onCounterOffer} onPay={onPayOffer} />
+                            )}
                           </div>
                         )}
                       </div>
@@ -1301,14 +1399,19 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpen
               {myThread ? (
                 <div>
                   <div className="text-xs mb-1 flex items-center gap-1" style={{ color: myThread.kind === "trade" ? "#8b5cf6" : "#4ade80" }}>
-                    {myThread.kind === "trade" ? <Repeat size={13} /> : <MessageCircle size={13} />}
-                    Din konversation med {item.owner}
+                    {myThread.kind === "trade" ? <Repeat size={13} /> : <Tag size={13} />}
+                    {myThread.kind === "trade" ? `Din konversation med ${item.owner}` : `Ditt bud till ${item.owner}`}
                     {myThread.kind === "trade" && ` — bytesförslag: ${myThread.offeredItemTitle} (${myThread.tradeType === "permanent" ? "permanent" : myThread.tradeDays + " dagar"})`}
                   </div>
                   {myThread.kind === "trade" && (
-                    <TradeStatusBar thread={myThread} myName={name} onApprove={onApproveTrade} onReject={onRejectTrade} onComplete={onCompleteTrade} />
+                    <>
+                      <TradeStatusBar thread={myThread} myName={name} onApprove={onApproveTrade} onReject={onRejectTrade} onComplete={onCompleteTrade} />
+                      <ChatThread thread={myThread} myName={name} onReply={onReply} />
+                    </>
                   )}
-                  <ChatThread thread={myThread} myName={name} onReply={onReply} />
+                  {myThread.kind === "buy" && (
+                    <OfferBar thread={myThread} myName={name} item={item} onAccept={onAcceptOffer} onReject={onRejectOffer} onCounter={onCounterOffer} onPay={onPayOffer} />
+                  )}
                 </div>
               ) : (
                 <>
@@ -1316,16 +1419,17 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpen
                     <button onClick={() => setAskOpen(true)}
                       className="w-full py-2.5 rounded-lg text-sm flex items-center justify-center gap-2"
                       style={{ ...fontDisplay, fontSize: "15px", background: "transparent", border: "1px solid #4ade8066", color: "#4ade80" }}>
-                      <MessageCircle size={15} /> FRÅGA OM ATT KÖPA LOSS
+                      <Tag size={15} /> LÄGG ETT BUD
                     </button>
                   )}
                   {askOpen && (
                     <div className="rounded-lg p-3 space-y-2" style={{ background: "#121214", border: "1px solid #4ade8044" }}>
-                      <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={2} placeholder="t.ex. Hej! Vill du sälja den, och för hur mycket?"
-                        className="w-full px-3 py-2 rounded-md outline-none text-sm resize-none" style={inputStyle} />
+                      <label className="text-[11px]" style={{ color: "#8a7aa8" }}>Ditt bud (kr)</label>
+                      <input type="number" min="1" value={offerAmount} onChange={(e) => setOfferAmount(e.target.value)} placeholder="t.ex. 150"
+                        className="w-full px-3 py-2 rounded-md outline-none text-sm" style={inputStyle} />
                       <button type="button" onClick={submitAsk} className="w-full py-2 rounded-md text-sm flex items-center justify-center gap-2"
                         style={{ ...fontDisplay, fontSize: "14px", background: "#4ade80", color: "#121214" }}>
-                        <Send size={14} /> SKICKA FÖRFRÅGAN
+                        <Send size={14} /> SKICKA BUD
                       </button>
                     </div>
                   )}
@@ -2166,8 +2270,22 @@ function RewindrAppInner() {
     setOpenItem(null);
   });
 
-  const handleStartThread = withErrorHandling(async (item, buyerName, text) => {
-    await api.createThread({ itemId: item.id, kind: "buy", message: text });
+  const handleStartThread = withErrorHandling(async (item, buyerName, amount) => {
+    await api.createThread({ itemId: item.id, kind: "buy", offerAmount: amount });
+  });
+
+  const handleAcceptOffer = withErrorHandling(async (threadId) => {
+    await api.acceptOffer(threadId);
+  });
+  const handleRejectOffer = withErrorHandling(async (threadId) => {
+    await api.rejectOffer(threadId);
+  });
+  const handleCounterOffer = withErrorHandling(async (threadId, amount) => {
+    await api.counterOffer(threadId, amount);
+  });
+  const handlePayOffer = withErrorHandling(async (threadId, delivery) => {
+    const data = await api.payOffer(threadId, delivery);
+    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
   });
 
   const handleProposeTrade = withErrorHandling(async (item, offeredItem, tradeType, days, message) => {
@@ -2436,6 +2554,10 @@ function RewindrAppInner() {
         onApproveTrade={handleApproveTrade}
         onRejectTrade={handleRejectTrade}
         onCompleteTrade={handleCompleteTrade}
+        onAcceptOffer={handleAcceptOffer}
+        onRejectOffer={handleRejectOffer}
+        onCounterOffer={handleCounterOffer}
+        onPayOffer={handlePayOffer}
         reviews={reviews}
         onAddReview={handleAddReview}
         accounts={accounts}

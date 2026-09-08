@@ -102,6 +102,9 @@ CREATE TABLE IF NOT EXISTS threads (
   status TEXT NOT NULL DEFAULT 'pending',
   owner_confirmed INTEGER NOT NULL DEFAULT 0,
   buyer_confirmed INTEGER NOT NULL DEFAULT 0,
+  offer_amount INTEGER,
+  offer_turn TEXT,
+  offer_status TEXT NOT NULL DEFAULT 'pending',
   created_at INTEGER NOT NULL
 );
 
