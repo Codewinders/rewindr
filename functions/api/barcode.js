@@ -1,10 +1,7 @@
 import { json, getSessionUser } from "../../lib/db.js";
 
-// Använder upcdatabase.org istället för UPCitemdb — UPCitemdbs gratisnivå
-// kräver ingen inloggning alls, vilket betyder att kvoten (100/dag) delas
-// mellan ALLA Cloudflare-projekt i världen som råkar anropa den, inte
-// bara oss. Den blir därför ofta redan uttömd. upcdatabase.org kräver ett
-// gratis konto + egen nyckel, så kvoten är garanterat er egen.
+// Använder upcdatabase.org — se tidigare kommentar i git-historiken för
+// varför (UPCitemdbs helt öppna gratisnivå delar kvot med hela internet).
 //
 // Så här skaffar ni nyckeln (gratis, inget kort krävs):
 // 1. Skapa konto på https://upcdatabase.org/signup
@@ -26,22 +23,33 @@ export async function onRequestGet({ request, env }) {
     const res = await fetch(`https://api.upcdatabase.org/product/${encodeURIComponent(upc)}`, {
       headers: { Authorization: `Bearer ${env.UPCDB_API_KEY}` },
     });
+
+    const rawText = await res.text();
+    let data;
+    try { data = JSON.parse(rawText); } catch { data = null; }
+
     if (res.status === 429) {
       return json({ error: "Dagens gräns för streckkodsuppslag är nådd — fyll i manuellt istället." }, 429);
     }
     if (res.status === 404) {
       return json({ found: false });
     }
-    const data = await res.json();
-    if (data.success === false || !data.title) {
-      return json({ found: false });
+    if (!res.ok || !data) {
+      // Tillfällig felsökningsinfo tills vi bekräftat att svarsformatet stämmer.
+      return json({ found: false, debug: { status: res.status, raw: rawText.slice(0, 300) } });
     }
-    return json({
-      found: true,
-      title: data.title || null,
-      category: data.category || null,
-    });
+
+    // Provar flera rimliga platser fältet kan ligga på, eftersom vi inte
+    // kunnat testa ett riktigt lyckat svar än.
+    const title = data.title || data.product?.title || data.data?.title || null;
+    const category = data.category || data.product?.category || data.data?.category || null;
+
+    if (!title) {
+      return json({ found: false, debug: { status: res.status, raw: rawText.slice(0, 300) } });
+    }
+
+    return json({ found: true, title, category });
   } catch (err) {
-    return json({ error: "Kunde inte slå upp streckkoden just nu — fyll i manuellt." }, 500);
+    return json({ error: "Kunde inte slå upp streckkoden just nu — fyll i manuellt. (" + err.message + ")" }, 500);
   }
 }

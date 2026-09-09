@@ -1678,7 +1678,8 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
         if (guess.format) setFormat(guess.format);
         if (!data.title) setScanError("Hittade streckkoden men ingen titel — fyll i manuellt.");
       } else {
-        setScanError("Ingen träff för den streckkoden — fyll i uppgifterna manuellt.");
+        const debugInfo = data.debug ? ` [Felsökning: status ${data.debug.status}, svar: ${data.debug.raw}]` : "";
+        setScanError("Ingen träff för den streckkoden — fyll i uppgifterna manuellt." + debugInfo);
       }
     } catch (err) {
       setScanError(err.message || "Kunde inte slå upp streckkoden.");
