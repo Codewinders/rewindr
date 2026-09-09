@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "./api.js";
-import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard, Disc, Heart, Award, MoreVertical, Camera } from "lucide-react";
+import { Film, Plus, X, Rewind, User, Clock, Sparkles, Search, Trash2, Tag, Inbox, Send, Truck, Home, Shield, Gamepad2, Repeat, Star, ShieldCheck, LogIn, LogOut, Crown, Ban, CreditCard, Disc, Heart, Award, MoreVertical, Camera, Menu } from "lucide-react";
 
 const FORMATS = ["VHS", "DVD", "Blu-ray", "4K Blu-ray"];
 const FORMAT_PRICE_HINT = {
@@ -170,6 +170,7 @@ function Marquee({ query, setQuery }) {
 }
 
 function Tabs({ active, setActive, showAdmin, showMyListings }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const tabs = [
     { id: "browse", label: "Bläddra" },
     { id: "wanted", label: "Efterlysningar" },
@@ -181,22 +182,63 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
     { id: "mine", label: "Mina lån" },
     ...(showAdmin ? [{ id: "admin", label: "Admin" }] : []),
   ];
+  const activeLabel = tabs.find((t) => t.id === active)?.label || "";
+
   return (
-    <div className="flex gap-1.5 mb-8 justify-center p-1.5 rounded-xl overflow-x-auto rw-no-scrollbar sm:flex-wrap"
-      style={{ ...fontDisplay, background: "#1c1c20", border: "1px solid #33333a66" }}>
-      {tabs.map((t) => (
-        <button key={t.id} onClick={() => setActive(t.id)}
-          className="px-4 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base rounded-lg transition-colors flex items-center gap-1.5 sm:gap-2 shrink-0"
-          style={{
-            letterSpacing: "0.04em",
-            color: active === t.id ? "#121214" : "#a99bc4",
-            background: active === t.id ? "#ffe94a" : "transparent",
-          }}>
-          {t.id === "admin" && <Crown size={13} />}
-          {t.label}
-        </button>
-      ))}
-    </div>
+    <>
+      {/* Mobil: knapp som öppnar en sidomeny, istället för en trång flikrad */}
+      <button onClick={() => setMobileOpen(true)}
+        className="sm:hidden flex items-center gap-2 mb-8 w-full px-4 py-3 rounded-xl"
+        style={{ ...fontDisplay, background: "#1c1c20", border: "1px solid #33333a66", color: "#f3eefc" }}>
+        <Menu size={18} style={{ color: "#ffe94a" }} />
+        {activeLabel}
+      </button>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-[80] sm:hidden" onClick={() => setMobileOpen(false)}>
+          <div className="absolute inset-0" style={{ background: "rgba(5,2,12,0.75)" }} />
+          <div onClick={(e) => e.stopPropagation()}
+            className="absolute top-0 right-0 bottom-0 w-64 max-w-[80vw] p-4 overflow-y-auto"
+            style={{ background: "#1c1c20", borderLeft: "1px solid #33333a" }}>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm" style={{ ...fontDisplay, color: "#ffe94a" }}>MENY</span>
+              <button onClick={() => setMobileOpen(false)} style={{ color: "#8a7aa8" }}><X size={20} /></button>
+            </div>
+            <div className="flex flex-col gap-1">
+              {tabs.map((t) => (
+                <button key={t.id} onClick={() => { setActive(t.id); setMobileOpen(false); }}
+                  className="text-left px-3 py-2.5 rounded-lg text-sm flex items-center gap-2"
+                  style={{
+                    ...fontDisplay,
+                    color: active === t.id ? "#121214" : "#a99bc4",
+                    background: active === t.id ? "#ffe94a" : "transparent",
+                  }}>
+                  {t.id === "admin" && <Crown size={13} />}
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop/tablet: vanlig pill-rad */}
+      <div className="hidden sm:flex gap-1.5 mb-8 justify-center flex-wrap p-1.5 rounded-xl"
+        style={{ ...fontDisplay, background: "#1c1c20", border: "1px solid #33333a66" }}>
+        {tabs.map((t) => (
+          <button key={t.id} onClick={() => setActive(t.id)}
+            className="px-5 py-2.5 text-base rounded-lg transition-colors flex items-center gap-2"
+            style={{
+              letterSpacing: "0.04em",
+              color: active === t.id ? "#121214" : "#a99bc4",
+              background: active === t.id ? "#ffe94a" : "transparent",
+            }}>
+            {t.id === "admin" && <Crown size={13} />}
+            {t.label}
+          </button>
+        ))}
+      </div>
+    </>
   );
 }
 
