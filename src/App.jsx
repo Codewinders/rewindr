@@ -1620,6 +1620,7 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
   const [scanBusy, setScanBusy] = useState(false);
   const [scanError, setScanError] = useState("");
   const [scanFoundTitle, setScanFoundTitle] = useState("");
+  const [scanDebug, setScanDebug] = useState(null);
 
   useEffect(() => { if (type === "game" && !PLATFORMS.includes(format)) setFormat(PLATFORMS[0]); if (type === "movie" && !FORMATS.includes(format)) setFormat(FORMATS[1]); }, [type]);
 
@@ -1669,6 +1670,7 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
     setScanBusy(true);
     setScanError("");
     setScanFoundTitle("");
+    setScanDebug(null);
     try {
       const data = await api.lookupBarcode(code);
       if (data.found) {
@@ -1678,8 +1680,8 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
         if (guess.format) setFormat(guess.format);
         if (!data.title) setScanError("Hittade streckkoden men ingen titel — fyll i manuellt.");
       } else {
-        const debugInfo = data.debug ? ` [Felsökning: status ${data.debug.status}, svar: ${data.debug.raw}]` : "";
-        setScanError("Ingen träff för den streckkoden — fyll i uppgifterna manuellt." + debugInfo);
+        setScanError("Ingen träff för den streckkoden — fyll i uppgifterna manuellt.");
+        if (data.debug) setScanDebug(data.debug);
       }
     } catch (err) {
       setScanError(err.message || "Kunde inte slå upp streckkoden.");
@@ -1768,6 +1770,18 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
         <p className="text-[11px]" style={{ color: "#4ade80" }}>Hittade: {scanFoundTitle} — dubbelkolla att allt stämmer nedan.</p>
       )}
       {scanError && <p className="text-[11px]" style={{ color: "#ff8a8a" }}>{scanError}</p>}
+      {scanDebug && (
+        <div className="rounded-lg p-3 text-[11px] space-y-2" style={{ background: "#121214", border: "1px solid #ff8a8a44", ...fontBody }}>
+          <div className="flex items-center justify-between">
+            <span style={{ color: "#ff8a8a" }}>Felsökningsinfo (kopiera och skicka till supporten)</span>
+            <button type="button" onClick={() => navigator.clipboard?.writeText(JSON.stringify(scanDebug, null, 2))}
+              className="px-2 py-1 rounded" style={{ background: "#33333a", color: "#21e6ec" }}>
+              Kopiera
+            </button>
+          </div>
+          <pre className="whitespace-pre-wrap break-all" style={{ color: "#c9b8e0" }}>{JSON.stringify(scanDebug, null, 2)}</pre>
+        </div>
+      )}
       {scannerOpen && <BarcodeScanner onResult={handleBarcodeResult} onClose={() => setScannerOpen(false)} />}
 
       <div>
