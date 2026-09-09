@@ -31,11 +31,9 @@ export async function onRequestGet({ request, env }) {
     if (res.status === 429) {
       return json({ error: "Dagens gräns för streckkodsuppslag är nådd — fyll i manuellt istället." }, 429);
     }
-    if (res.status === 404) {
-      return json({ found: false });
-    }
     if (!res.ok || !data) {
-      // Tillfällig felsökningsinfo tills vi bekräftat att svarsformatet stämmer.
+      // Tillfällig felsökningsinfo tills vi bekräftat att svarsformatet stämmer (inklusive 404 — vi
+      // vill se om det verkligen betyder "hittades inte" eller något annat, t.ex. fel nyckel).
       return json({ found: false, debug: { status: res.status, raw: rawText.slice(0, 300) } });
     }
 
