@@ -116,7 +116,7 @@ function useRewindrData() {
 }
 
 // ---------- shared bits ----------
-const fontDisplay = { fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.03em" };
+const fontDisplay = { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, letterSpacing: "-0.01em" };
 const fontLogo = { fontFamily: "'Anton', sans-serif" };
 const fontBody = { fontFamily: "'Space Grotesk', sans-serif" };
 
@@ -201,7 +201,7 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
             className="absolute top-0 right-0 bottom-0 w-64 max-w-[80vw] p-4 overflow-y-auto"
             style={{ background: "#1c1c20", borderLeft: "1px solid #33333a" }}>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm" style={{ ...fontDisplay, color: "#ffe94a" }}>MENY</span>
+              <span className="text-sm" style={{ ...fontDisplay, color: "#ffe94a" }}>Meny</span>
               <button onClick={() => setMobileOpen(false)} style={{ color: "#8a7aa8" }}><X size={20} /></button>
             </div>
             <div className="flex flex-col gap-1">
@@ -405,7 +405,7 @@ function AuthPanel({ name, accounts, myCredits, onAuthChange }) {
           className="w-full px-3 py-2 rounded-md outline-none text-sm mb-2" style={inputStyle} />
         {error && <div className="text-xs mb-2" style={{ color: "#ff8a8a" }}>{error}</div>}
         <button type="button" disabled={busy} onClick={submitVerify} className="w-full py-2 rounded-md text-sm disabled:opacity-50" style={{ ...fontDisplay, fontSize: "14px", background: "#4ade80", color: "#121214" }}>
-          {busy ? "..." : "VERIFIERA"}
+          {busy ? "..." : "Verifiera"}
         </button>
       </div>
     );
@@ -414,9 +414,9 @@ function AuthPanel({ name, accounts, myCredits, onAuthChange }) {
   return (
     <div className="mb-4 rounded-lg border p-4 max-w-sm mx-auto" style={{ borderColor: "#33333a", background: "#1c1c20" }}>
       <div className="flex gap-2 mb-3 text-xs" style={fontDisplay}>
-        <button onClick={() => { setMode("login"); setError(""); }} style={{ color: mode === "login" ? "#ffe94a" : "#8a7aa8" }}>LOGGA IN</button>
+        <button onClick={() => { setMode("login"); setError(""); }} style={{ color: mode === "login" ? "#ffe94a" : "#8a7aa8" }}>Logga in</button>
         <span style={{ color: "#33333a" }}>/</span>
-        <button onClick={() => { setMode("register"); setError(""); }} style={{ color: mode === "register" ? "#ffe94a" : "#8a7aa8" }}>SKAPA KONTO</button>
+        <button onClick={() => { setMode("register"); setError(""); }} style={{ color: mode === "register" ? "#ffe94a" : "#8a7aa8" }}>Skapa konto</button>
       </div>
       <div className="space-y-2" style={fontBody}>
         {(() => {
@@ -542,7 +542,7 @@ function OwnerReviews({ owner, reviews, name, onAddReview, isOwner }) {
           <StarRow value={rating} onChange={setRating} />
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder="Hur var uthyrningen?"
             className="w-full px-2 py-1.5 rounded-md outline-none text-xs resize-none" style={{ background: "#1c1c20", border: "1px solid #33333a", color: "#f3eefc", ...fontBody }} />
-          <button type="button" onClick={submit} className="w-full py-1.5 rounded-md text-xs" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay }}>SKICKA</button>
+          <button type="button" onClick={submit} className="w-full py-1.5 rounded-md text-xs" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay }}>Skicka</button>
         </div>
       )}
       {ownerReviews.length > 0 && (
@@ -712,7 +712,7 @@ function Cassette({ item, onOpen, isFavorite, onToggleFavorite }) {
         )}
         {item.sold && (
           <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: "rgba(10,6,18,0.7)" }}>
-            <span className="px-3 py-1 rounded-full text-xs" style={{ ...fontDisplay, background: "#33333a", color: "#f3eefc" }}>SÅLD</span>
+            <span className="px-3 py-1 rounded-full text-xs" style={{ ...fontDisplay, background: "#33333a", color: "#f3eefc" }}>Såld</span>
           </div>
         )}
       </div>
@@ -764,10 +764,10 @@ function TradeStatusBar({ thread, myName, onApprove, onReject, onComplete }) {
       {thread.status === "pending" && isOwner && (
         <div className="flex gap-2 mt-2">
           <button onClick={() => onApprove(thread.id)} className="flex-1 py-1.5 rounded-md" style={{ background: "#4ade80", color: "#121214", ...fontDisplay, fontSize: "13px" }}>
-            GODKÄNN
+            Godkänn
           </button>
           <button onClick={() => onReject(thread.id)} className="flex-1 py-1.5 rounded-md" style={{ background: "#33333a", color: "#ff8a8a", ...fontDisplay, fontSize: "13px" }}>
-            NEKA
+            Neka
           </button>
         </div>
       )}
@@ -780,7 +780,7 @@ function TradeStatusBar({ thread, myName, onApprove, onReject, onComplete }) {
           <p style={{ color: "#8a7aa8" }}>Du har markerat bytet som genomfört. Väntar på {isOwner ? thread.buyerName : thread.owner}.</p>
         ) : (
           <button onClick={() => onComplete(thread.id)} className="w-full py-1.5 rounded-md mt-1" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay, fontSize: "13px" }}>
-            MARKERA SOM GENOMFÖRT
+            Markera som genomfört
           </button>
         )
       )}
@@ -827,13 +827,13 @@ function OfferBar({ thread, myName, onAccept, onReject, onCounter, onPay, item }
       {thread.offerStatus === "pending" && myTurn && !countering && (
         <div className="flex gap-2">
           <button onClick={() => onAccept(thread.id)} className="flex-1 py-1.5 rounded-md" style={{ background: "#4ade80", color: "#121214", ...fontDisplay, fontSize: "13px" }}>
-            ACCEPTERA
+            Acceptera
           </button>
           <button onClick={() => setCountering(true)} className="flex-1 py-1.5 rounded-md" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay, fontSize: "13px" }}>
-            MOTBJUD
+            Motbjud
           </button>
           <button onClick={() => onReject(thread.id)} className="flex-1 py-1.5 rounded-md" style={{ background: "#33333a", color: "#ff8a8a", ...fontDisplay, fontSize: "13px" }}>
-            NEKA
+            Neka
           </button>
         </div>
       )}
@@ -841,7 +841,7 @@ function OfferBar({ thread, myName, onAccept, onReject, onCounter, onPay, item }
         <div className="flex gap-2">
           <input type="number" min="1" value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)}
             className="flex-1 px-2 py-1.5 rounded-md outline-none text-sm" style={{ background: "#121214", border: "1px solid #33333a", color: "#f3eefc" }} />
-          <button onClick={submitCounter} className="px-3 rounded-md" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay, fontSize: "13px" }}>SKICKA</button>
+          <button onClick={submitCounter} className="px-3 rounded-md" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay, fontSize: "13px" }}>Skicka</button>
           <button onClick={() => setCountering(false)} className="px-3 rounded-md" style={{ background: "#33333a", color: "#8a7aa8" }}>✕</button>
         </div>
       )}
@@ -867,12 +867,12 @@ function OfferBar({ thread, myName, onAccept, onReject, onCounter, onPay, item }
               </div>
             )}
             <button onClick={() => onPay(thread.id, deliveryChoice)} className="w-full py-1.5 rounded-md" style={{ background: "#4ade80", color: "#121214", ...fontDisplay, fontSize: "13px" }}>
-              BETALA {thread.offerAmount} KR
+              Betala {thread.offerAmount} kr
             </button>
           </div>
         ) : (
           <button onClick={() => setPaying(true)} className="w-full py-1.5 rounded-md" style={{ background: "#4ade80", color: "#121214", ...fontDisplay, fontSize: "13px" }}>
-            GÅ TILL BETALNING
+            Gå till betalning
           </button>
         )
       )}
@@ -957,7 +957,7 @@ function ShelfSpine({ item, onOpen, isFavorite, onToggleFavorite }) {
       </div>
       {item.sold && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(10,6,18,0.7)" }}>
-          <span className="text-[10px]" style={{ ...fontDisplay, color: "#f3eefc" }}>SÅLD</span>
+          <span className="text-[10px]" style={{ ...fontDisplay, color: "#f3eefc" }}>Såld</span>
         </div>
       )}
       {!pulled && (
@@ -1073,7 +1073,7 @@ function RentFlow({ item, alreadyRented, activeRental, name, onConfirm }) {
     return (
       <button disabled className="w-full py-2.5 rounded-lg text-sm opacity-50"
         style={{ ...fontDisplay, fontSize: "16px", background: "#332a44", color: "#fff" }}>
-        {mine ? "REDAN HYRD AV DIG" : "REDAN UTHYRD"}
+        {mine ? "Redan hyrd av dig" : "Redan uthyrd"}
       </button>
     );
   }
@@ -1083,7 +1083,7 @@ function RentFlow({ item, alreadyRented, activeRental, name, onConfirm }) {
       <button onClick={() => setExpanded(true)}
         className="w-full py-2.5 rounded-lg text-sm"
         style={{ ...fontDisplay, fontSize: "16px", background: "#ff2fb0", color: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}>
-        HYR NU
+        Hyr nu
       </button>
     );
   }
@@ -1149,7 +1149,7 @@ function RentFlow({ item, alreadyRented, activeRental, name, onConfirm }) {
       <button onClick={() => onConfirm(deliveryChoice, shipCost, safeDays, rentCost)}
         className="w-full py-2 rounded-md text-sm"
         style={{ ...fontDisplay, fontSize: "15px", background: "#ff2fb0", color: "#fff" }}>
-        BEKRÄFTA HYRA · {total} KR
+        Bekräfta hyra · {total} kr
       </button>
     </div>
   );
@@ -1176,7 +1176,7 @@ function BuyFlow({ item, alreadySold, name, onConfirm }) {
       <button onClick={() => setExpanded(true)}
         className="w-full py-2.5 rounded-lg text-sm"
         style={{ ...fontDisplay, fontSize: "16px", background: "#4ade80", color: "#121214" }}>
-        KÖP NU · {item.salePrice} KR
+        Köp nu · {item.salePrice} kr
       </button>
     );
   }
@@ -1222,7 +1222,7 @@ function BuyFlow({ item, alreadySold, name, onConfirm }) {
       <button onClick={() => onConfirm(deliveryChoice, shipCost)}
         className="w-full py-2 rounded-md text-sm"
         style={{ ...fontDisplay, fontSize: "15px", background: "#4ade80", color: "#121214" }}>
-        BEKRÄFTA KÖP · {total} KR
+        Bekräfta köp · {total} kr
       </button>
     </div>
   );
@@ -1241,7 +1241,7 @@ function TradeFlow({ item, myItems, onPropose }) {
       <button onClick={() => setOpen(true)}
         className="w-full py-2.5 rounded-lg text-sm flex items-center justify-center gap-2"
         style={{ ...fontDisplay, fontSize: "15px", background: "transparent", border: "1px solid #8b5cf666", color: "#8b5cf6" }}>
-        <Repeat size={15} /> FÖRESLÅ BYTE
+        <Repeat size={15} /> Föreslå byte
       </button>
     );
   }
@@ -1295,7 +1295,7 @@ function TradeFlow({ item, myItems, onPropose }) {
       <div className="text-[11px]" style={{ color: "#6d5d8a" }}>Byten har lägre avgift ({TRADE_FEE_PCT}%) än vanlig hyra ({RENT_FEE_PCT}%).</div>
       <button type="button" onClick={submit} className="w-full py-2 rounded-md text-sm flex items-center justify-center gap-2"
         style={{ ...fontDisplay, fontSize: "14px", background: "#8b5cf6", color: "#fff" }}>
-        <Repeat size={14} /> SKICKA BYTESFÖRSLAG
+        <Repeat size={14} /> Skicka bytesförslag
       </button>
     </div>
   );
@@ -1384,7 +1384,7 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpen
                 <button onClick={() => onRemove(item)}
                   className="flex-1 py-2.5 rounded-lg text-sm flex items-center justify-center gap-2"
                   style={{ ...fontDisplay, fontSize: "16px", background: "#33333a", color: "#ff8a8a" }}>
-                  <Trash2 size={16} /> TA BORT
+                  <Trash2 size={16} /> Ta bort
                 </button>
               </div>
               {itemThreads.length > 0 && (
@@ -1466,7 +1466,7 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpen
                     <button onClick={() => setAskOpen(true)}
                       className="w-full py-2.5 rounded-lg text-sm flex items-center justify-center gap-2"
                       style={{ ...fontDisplay, fontSize: "15px", background: "transparent", border: "1px solid #4ade8066", color: "#4ade80" }}>
-                      <Tag size={15} /> LÄGG ETT BUD
+                      <Tag size={15} /> Lägg ett bud
                     </button>
                   )}
                   {askOpen && (
@@ -1476,7 +1476,7 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpen
                         className="w-full px-3 py-2 rounded-md outline-none text-sm" style={inputStyle} />
                       <button type="button" onClick={submitAsk} className="w-full py-2 rounded-md text-sm flex items-center justify-center gap-2"
                         style={{ ...fontDisplay, fontSize: "14px", background: "#4ade80", color: "#121214" }}>
-                        <Send size={14} /> SKICKA BUD
+                        <Send size={14} /> Skicka bud
                       </button>
                     </div>
                   )}
@@ -1590,7 +1590,7 @@ function BarcodeScanner({ onResult, onClose }) {
             inputMode="numeric"
             onKeyDown={(e) => { if (e.key === "Enter") submitManual(); }}
             className="flex-1 px-3 py-2 rounded-md outline-none text-sm" style={{ background: "#121214", border: "1px solid #33333a", color: "#f3eefc" }} />
-          <button onClick={submitManual} className="px-3 rounded-md text-xs" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay }}>SÖK</button>
+          <button onClick={submitManual} className="px-3 rounded-md text-xs" style={{ background: "#21e6ec", color: "#121214", ...fontDisplay }}>Sök</button>
         </div>
       </div>
     </div>
@@ -1914,7 +1914,7 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
       {formError && <div className="text-xs" style={{ color: "#ff8a8a" }}>{formError}</div>}
       <button type="button" onClick={submit} className="w-full py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm"
         style={{ ...fontDisplay, fontSize: "16px", background: "#21e6ec", color: "#121214", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}>
-        {editingItem ? "SPARA ÄNDRINGAR" : <><Plus size={16} /> LÄGG TILL I HYLLAN</>}
+        {editingItem ? "Spara ändringar" : <><Plus size={16} /> Lägg till i hyllan</>}
       </button>
       <p className="text-[11px] pt-1" style={{ color: "#6d5d8a" }}>Titlar du lägger upp blir synliga för alla som öppnar Rewindr.</p>
     </div>
@@ -2003,7 +2003,7 @@ function WantedAdCard({ ad, name, onDelete, onRespond }) {
           <div className="mt-2 space-y-2">
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Valfritt meddelande…"
               className="w-full px-3 py-2 rounded-md outline-none text-xs" style={{ background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody }} />
-            <button onClick={send} className="w-full py-1.5 rounded-md text-xs" style={{ background: "#4ade80", color: "#121214", ...fontDisplay }}>SKICKA</button>
+            <button onClick={send} className="w-full py-1.5 rounded-md text-xs" style={{ background: "#4ade80", color: "#121214", ...fontDisplay }}>Skicka</button>
           </div>
         ) : (
           <button onClick={() => setResponding(true)} className="mt-2 text-xs" style={{ color: "#4ade80", ...fontBody }}>Jag har den här!</button>
@@ -2044,7 +2044,7 @@ function MessageCard({ thread, name, listing, onApproveTrade, onRejectTrade, onC
             {thread.kind === "buy" && <span>· {thread.offerAmount} kr</span>}
           </div>
         </div>
-        {needsMe && <span className="text-[10px] px-2 py-0.5 rounded-full shrink-0" style={{ background: color + "22", color, ...fontDisplay }}>DIN TUR</span>}
+        {needsMe && <span className="text-[10px] px-2 py-0.5 rounded-full shrink-0" style={{ background: color + "22", color, ...fontDisplay }}>Din tur</span>}
       </button>
       {open && (
         <div className="px-3 pb-3">
@@ -2126,7 +2126,7 @@ function WantedAdsPanel({ ads, name, onAdd, onDelete, onRespond }) {
             className="w-full px-3 py-2 rounded-md outline-none text-sm" style={{ background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody }} />
           <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Detaljer (valfritt) — t.ex. vilket format"
             className="w-full px-3 py-2 rounded-md outline-none text-sm" style={{ background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody }} />
-          <button onClick={submit} className="w-full py-2 rounded-md text-sm" style={{ background: "#ffe94a", color: "#121214", ...fontDisplay }}>LÄGG UPP EFTERLYSNING</button>
+          <button onClick={submit} className="w-full py-2 rounded-md text-sm" style={{ background: "#ffe94a", color: "#121214", ...fontDisplay }}>Lägg upp efterlysning</button>
         </div>
       )}
       {ads.length === 0 ? (
@@ -2310,7 +2310,7 @@ function ProfilePage({ username, onBack, listings, rentals, purchases, reviews, 
 
       {theirReviews.length > 0 && (
         <div className="border-t pt-4 max-w-2xl" style={{ borderColor: "#33333a" }}>
-          <div className="text-sm mb-2" style={{ ...fontDisplay, fontSize: "14px", color: "#ffe94a" }}>RECENSIONER</div>
+          <div className="text-sm mb-2" style={{ ...fontDisplay, fontSize: "14px", color: "#ffe94a" }}>Recensioner</div>
           <div className="space-y-1.5">
             {theirReviews.slice().reverse().map((r) => (
               <div key={r.id} className="text-xs rounded-md p-2" style={{ background: "#121214", ...fontBody }}>
@@ -2454,7 +2454,7 @@ class ErrorBoundary extends React.Component {
             <button onClick={() => this.setState({ hasError: false })}
               className="px-4 py-2 rounded-md text-sm"
               style={{ background: "#21e6ec", color: "#121214", ...fontDisplay }}>
-              FÖRSÖK IGEN
+              Försök igen
             </button>
           </div>
         </div>
