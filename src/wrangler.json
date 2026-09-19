@@ -1,0 +1,18 @@
+{
+  "name": "rewindr",
+  "compatibility_date": "2026-01-01",
+  "pages_build_output_dir": "dist",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "rewindr-db",
+      "database_id": "fa63decf-f41f-44b3-9680-b8d5fdfd44bd"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "rewindr-images"
+    }
+  ]
+}
