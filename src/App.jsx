@@ -142,13 +142,13 @@ function GlobalStyle() {
 // ---------- header ----------
 function Marquee({ query, setQuery }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border mb-8" style={{ borderColor: "#33333a", background: "linear-gradient(180deg, #150c24 0%, #121214 100%)" }}>
+    <div className="relative overflow-hidden rounded-xl border mb-8" style={{ borderColor: "#33333a", background: "linear-gradient(180deg, #1c1c20 0%, #121214 100%)" }}>
       <div className="relative px-6 py-12 sm:py-16 text-center">
         <div className="flex items-center justify-center gap-2 text-[11px] tracking-[0.15em] uppercase mb-4" style={{ ...fontBody, color: "#6d5d8a" }}>
           <Rewind size={13} /> öppet dygnet runt · lån för lån
         </div>
         <h1 className="text-5xl sm:text-6xl leading-none"
-          style={{ ...fontLogo, color: "#ff4fc0", textShadow: "0 0 18px #ff2fb055" }}>
+          style={{ ...fontLogo, color: "#ff4fc0", textShadow: "0 1px 0 #00000040" }}>
           REWINDR
         </h1>
         <p className="mt-5 text-sm sm:text-base max-w-md mx-auto" style={{ ...fontBody, color: "#a99bc4" }}>
@@ -188,7 +188,7 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
     <>
       {/* Mobil: knapp som öppnar en sidomeny, istället för en trång flikrad */}
       <button onClick={() => setMobileOpen(true)}
-        className="sm:hidden flex items-center gap-2 mb-8 w-full px-4 py-3 rounded-xl"
+        className="sm:hidden flex items-center gap-2 mb-8 w-full px-4 py-3 rounded-lg"
         style={{ ...fontDisplay, background: "#1c1c20", border: "1px solid #33333a66", color: "#f3eefc" }}>
         <Menu size={18} style={{ color: "#ffe94a" }} />
         {activeLabel}
@@ -223,7 +223,7 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
       )}
 
       {/* Desktop/tablet: vanlig pill-rad */}
-      <div className="hidden sm:flex gap-1.5 mb-8 justify-center flex-wrap p-1.5 rounded-xl"
+      <div className="hidden sm:flex gap-1.5 mb-8 justify-center flex-wrap p-1.5 rounded-lg"
         style={{ ...fontDisplay, background: "#1c1c20", border: "1px solid #33333a66" }}>
         {tabs.map((t) => (
           <button key={t.id} onClick={() => setActive(t.id)}
@@ -288,7 +288,7 @@ function AuthPanel({ name, accounts, myCredits, onAuthChange }) {
     const acc = accounts[name];
     return (
       <div className="mb-4">
-        <div className="flex items-center justify-between gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl border flex-wrap" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
+        <div className="flex items-center justify-between gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg border flex-wrap" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
           <div className="flex items-center gap-2 text-sm flex-wrap" style={{ color: "#f3eefc" }}>
             <User size={15} style={{ color: "#21e6ec" }} />
             Inloggad som <strong>{name}</strong>
@@ -395,7 +395,7 @@ function AuthPanel({ name, accounts, myCredits, onAuthChange }) {
 
   if (pendingVerify) {
     return (
-      <div className="mb-4 rounded-xl border p-4 max-w-sm mx-auto" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
+      <div className="mb-4 rounded-lg border p-4 max-w-sm mx-auto" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
         <div className="text-sm mb-2" style={{ color: "#f3eefc" }}>Verifiera kontot "{pendingVerify}"</div>
         <p className="text-[11px] mb-2" style={{ color: "#6d5d8a" }}>
           Vi har skickat en 6-siffrig kod till din e-post. Ange den nedan (kolla även skräpposten om du inte ser den).
@@ -412,7 +412,7 @@ function AuthPanel({ name, accounts, myCredits, onAuthChange }) {
   }
 
   return (
-    <div className="mb-4 rounded-xl border p-4 max-w-sm mx-auto" style={{ borderColor: "#33333a", background: "#1c1c20" }}>
+    <div className="mb-4 rounded-lg border p-4 max-w-sm mx-auto" style={{ borderColor: "#33333a", background: "#1c1c20" }}>
       <div className="flex gap-2 mb-3 text-xs" style={fontDisplay}>
         <button onClick={() => { setMode("login"); setError(""); }} style={{ color: mode === "login" ? "#ffe94a" : "#8a7aa8" }}>LOGGA IN</button>
         <span style={{ color: "#33333a" }}>/</span>
@@ -689,7 +689,7 @@ function Cassette({ item, onOpen, isFavorite, onToggleFavorite }) {
   return (
     <div onClick={() => onOpen(item)} role="button" tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter") onOpen(item); }}
-      className="rw-card text-left rounded-xl overflow-hidden border transition-transform duration-200 group cursor-pointer"
+      className="rw-card text-left rounded-lg overflow-hidden border transition-transform duration-200 group cursor-pointer"
       style={{ borderColor: "#33333a", background: "#1c1c20" }}>
       <div className="h-28 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}22, #121214 80%)` }}>
         <div className="absolute left-0 top-0 bottom-0 w-1 z-10" style={{ background: color }} />
@@ -1003,7 +1003,7 @@ function Shelf({ items, onOpen, favorites, onToggleFavorite }) {
   const games = items.filter((i) => i.type === "game");
 
   return (
-    <div className="rounded-xl p-3 pt-6 sm:p-6 sm:pt-8 overflow-x-auto relative" style={{
+    <div className="rounded-lg p-3 pt-6 sm:p-6 sm:pt-8 overflow-x-auto relative" style={{
       background: "radial-gradient(ellipse at 50% 0%, #3a2a1a55 0%, #241a12 45%, #17110c 100%)",
       border: "1px solid #4a3220",
       boxShadow: "inset 0 0 60px rgba(0,0,0,0.4)",
@@ -1082,7 +1082,7 @@ function RentFlow({ item, alreadyRented, activeRental, name, onConfirm }) {
     return (
       <button onClick={() => setExpanded(true)}
         className="w-full py-2.5 rounded-lg text-sm"
-        style={{ ...fontDisplay, fontSize: "16px", background: "#ff2fb0", color: "#fff", boxShadow: "0 0 12px #ff2fb040" }}>
+        style={{ ...fontDisplay, fontSize: "16px", background: "#ff2fb0", color: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}>
         HYR NU
       </button>
     );
@@ -1325,7 +1325,7 @@ function ItemModal({ item, onClose, onRent, onPurchase, onRemove, onEdit, onOpen
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(5,2,12,0.8)" }} onClick={onClose}>
-      <div className="w-full max-w-sm rounded-2xl border overflow-hidden max-h-[90vh] overflow-y-auto" style={{ borderColor: color + "66", background: "#1c1c20" }} onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-sm rounded-xl border overflow-hidden max-h-[90vh] overflow-y-auto" style={{ borderColor: color + "66", background: "#1c1c20" }} onClick={(e) => e.stopPropagation()}>
         <div className="h-32 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}33, #121214 85%)` }}>
           {item.format && (
             <div className="absolute top-3 left-3 z-10 rounded-full p-1.5 flex items-center gap-1" style={{ background: "rgba(10,6,18,0.75)", border: `1px solid ${color}66` }}>
@@ -1568,7 +1568,7 @@ function BarcodeScanner({ onResult, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" style={{ background: "rgba(5,2,12,0.9)" }} onClick={onClose}>
-      <div className="w-full max-w-sm rounded-2xl border p-4" style={{ borderColor: "#33333a", background: "#1c1c20" }} onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-sm rounded-xl border p-4" style={{ borderColor: "#33333a", background: "#1c1c20" }} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg" style={{ ...fontDisplay, color: "#ffe94a" }}>Skanna streckkod</h3>
           <button onClick={onClose} style={{ color: "#8a7aa8" }}><X size={20} /></button>
@@ -1577,7 +1577,7 @@ function BarcodeScanner({ onResult, onClose }) {
         {supported && !cameraError ? (
           <div className="rounded-lg overflow-hidden mb-3 relative" style={{ background: "#121214" }}>
             <video ref={videoRef} className="w-full h-56 object-cover" muted playsInline />
-            <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-0.5" style={{ background: "#ff2fb0", boxShadow: "0 0 8px #ff2fb0" }} />
+            <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-0.5" style={{ background: "#ff2fb0", boxShadow: "0 1px 2px rgba(0,0,0,0.3)" }} />
           </div>
         ) : (
           <p className="text-xs mb-3" style={{ color: "#8a7aa8" }}>
@@ -1733,7 +1733,7 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
   };
 
   return (
-    <div className="max-w-md mx-auto space-y-4 rounded-2xl border p-5" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
+    <div className="max-w-md mx-auto space-y-4 rounded-xl border p-5" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-2xl" style={{ ...fontDisplay, color: "#ffe94a" }}>{editingItem ? "Redigera titel" : "Lägg upp en titel"}</h2>
         {editingItem && (
@@ -1913,7 +1913,7 @@ function ListForm({ name, onAdd, onUpdate, editingItem, onCancelEdit }) {
       )}
       {formError && <div className="text-xs" style={{ color: "#ff8a8a" }}>{formError}</div>}
       <button type="button" onClick={submit} className="w-full py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm"
-        style={{ ...fontDisplay, fontSize: "16px", background: "#21e6ec", color: "#121214", boxShadow: "0 0 12px #21e6ec40" }}>
+        style={{ ...fontDisplay, fontSize: "16px", background: "#21e6ec", color: "#121214", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}>
         {editingItem ? "SPARA ÄNDRINGAR" : <><Plus size={16} /> LÄGG TILL I HYLLAN</>}
       </button>
       <p className="text-[11px] pt-1" style={{ color: "#6d5d8a" }}>Titlar du lägger upp blir synliga för alla som öppnar Rewindr.</p>
@@ -1942,7 +1942,7 @@ function MyRentals({ rentals, listings, name, onReturn }) {
         const color = GENRE_COLORS[item.genre] || "#21e6ec";
         const total = r.rentCost + (r.shipCost || 0);
         return (
-          <div key={r.id} className="rounded-xl border p-4 flex items-center gap-3" style={{ borderColor: color + "44", background: "#1c1c20" }}>
+          <div key={r.id} className="rounded-lg border p-4 flex items-center gap-3" style={{ borderColor: color + "44", background: "#1c1c20" }}>
             {React.createElement(iconFor(item.type), { size: 22, style: { color } })}
             <div className="flex-1" style={fontBody}>
               <div className="text-sm flex items-center gap-2" style={{ color: "#f3eefc" }}>
@@ -1988,7 +1988,7 @@ function WantedAdCard({ ad, name, onDelete, onRespond }) {
   };
 
   return (
-    <div className="rounded-xl border p-4" style={{ borderColor: "#33333a", background: "#1c1c20" }}>
+    <div className="rounded-lg border p-4" style={{ borderColor: "#33333a", background: "#1c1c20" }}>
       <div className="flex items-center justify-between">
         <h3 className="text-base" style={{ ...fontDisplay, color: "#f3eefc" }}>{ad.title}</h3>
         {isMine && (
@@ -2031,7 +2031,7 @@ function MessageCard({ thread, name, listing, onApproveTrade, onRejectTrade, onC
   const Icon = listing ? iconFor(listing.type) : Tag;
 
   return (
-    <div className="rounded-xl border overflow-hidden" style={{ borderColor: needsMe ? color : "#33333a", background: "#1c1c20" }}>
+    <div className="rounded-lg border overflow-hidden" style={{ borderColor: needsMe ? color : "#33333a", background: "#1c1c20" }}>
       <button onClick={() => setOpen((v) => !v)} className="w-full flex items-center gap-3 p-3 text-left">
         <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}22` }}>
           <Icon size={18} style={{ color }} />
@@ -2120,7 +2120,7 @@ function WantedAdsPanel({ ads, name, onAdd, onDelete, onRespond }) {
   return (
     <div className="max-w-2xl mx-auto">
       {name && (
-        <div className="rounded-xl border p-4 mb-5 space-y-2" style={{ borderColor: "#33333a", background: "#1c1c20" }}>
+        <div className="rounded-lg border p-4 mb-5 space-y-2" style={{ borderColor: "#33333a", background: "#1c1c20" }}>
           <h2 className="text-xl mb-1" style={{ ...fontDisplay, color: "#ffe94a" }}>Efterlys en titel</h2>
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Vad letar du efter?"
             className="w-full px-3 py-2 rounded-md outline-none text-sm" style={{ background: "#121214", border: "1px solid #33333a", color: "#f3eefc", ...fontBody }} />
@@ -2163,7 +2163,7 @@ function MyPurchases({ purchases, listings, name, mode }) {
         const color = GENRE_COLORS[item.genre] || "#4ade80";
         const total = p.price + (p.shipCost || 0);
         return (
-          <div key={p.id} className="rounded-xl border p-4 flex items-center gap-3" style={{ borderColor: color + "44", background: "#1c1c20" }}>
+          <div key={p.id} className="rounded-lg border p-4 flex items-center gap-3" style={{ borderColor: color + "44", background: "#1c1c20" }}>
             {React.createElement(iconFor(item.type || "movie"), { size: 22, style: { color } })}
             <div className="flex-1" style={fontBody}>
               <div className="text-sm" style={{ color: "#f3eefc" }}>{item.title || "(borttagen titel)"}</div>
@@ -2332,7 +2332,7 @@ function InfoModal({ page, onClose }) {
   if (!page) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(5,2,12,0.85)" }} onClick={onClose}>
-      <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border p-6" style={{ borderColor: "#33333a", background: "#1c1c20" }} onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-xl border p-6" style={{ borderColor: "#33333a", background: "#1c1c20" }} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl" style={{ ...fontDisplay, color: "#ffe94a" }}>
             {page === "about" && "Om Rewindr"}
@@ -2446,7 +2446,7 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen w-full flex items-center justify-center p-6" style={{ background: "#121214" }}>
-          <div className="max-w-sm text-center rounded-2xl border p-6" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
+          <div className="max-w-sm text-center rounded-xl border p-6" style={{ borderColor: "#33333a", background: "#1c1c20", ...fontBody }}>
             <h2 className="text-xl mb-2" style={{ ...fontDisplay, color: "#ff2fb0" }}>Något gick fel</h2>
             <p className="text-sm mb-4" style={{ color: "#c9b8e0" }}>
               Rewindr stötte på ett oväntat fel. Testa att ladda om.
@@ -2636,7 +2636,7 @@ function RewindrAppInner() {
       <GlobalStyle />
       <div className="max-w-5xl mx-auto px-3 py-5 sm:px-4 sm:py-8">
         {lastError && (
-          <div className="mb-4 rounded-xl border p-3 text-xs flex items-center justify-between gap-2" style={{ borderColor: "#ff8a8a66", background: "#ff8a8a15", color: "#ff8a8a", ...fontBody }}>
+          <div className="mb-4 rounded-lg border p-3 text-xs flex items-center justify-between gap-2" style={{ borderColor: "#ff8a8a66", background: "#ff8a8a15", color: "#ff8a8a", ...fontBody }}>
             <span>{lastError}</span>
             <button onClick={() => setLastError("")} style={{ color: "#ff8a8a" }}>✕</button>
           </div>
