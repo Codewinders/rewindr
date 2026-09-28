@@ -142,7 +142,7 @@ function GlobalStyle() {
 // ---------- header ----------
 function Marquee({ query, setQuery, heroImage }) {
   return (
-    <div className="relative overflow-hidden rounded-xl mb-10" style={{ height: "clamp(320px, 46vw, 460px)" }}>
+    <div className="relative overflow-hidden mb-10 left-1/2 right-1/2 -mx-[50vw] w-screen" style={{ height: "clamp(340px, 50vw, 520px)" }}>
       {heroImage ? (
         <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ filter: "brightness(0.55)" }} />
       ) : (
@@ -150,7 +150,7 @@ function Marquee({ query, setQuery, heroImage }) {
       )}
       <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(18,18,20,0.2) 0%, rgba(18,18,20,0.55) 55%, #121214 100%)" }} />
 
-      <div className="relative h-full flex flex-col items-center justify-end px-6 pb-10 text-center">
+      <div className="relative h-full flex flex-col items-center justify-end px-6 sm:px-12 pb-12 text-center">
         <h1 className="text-2xl sm:text-4xl leading-tight max-w-lg" style={{ ...fontDisplay, fontWeight: 700, color: "#f3eefc" }}>
           Filmer och spel, från riktiga människor
         </h1>
@@ -2319,7 +2319,7 @@ function ProfilePage({ username, onBack, listings, rentals, purchases, reviews, 
       ) : theirItems.length === 0 ? (
         <div className="text-center py-8 text-xs" style={{ color: "#6d5d8a", ...fontBody }}>Inga annonser i den här kategorin.</div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-4 mb-8">
           {theirItems.map((item) => (
             <Cassette key={item.id} item={item} onOpen={onOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={onToggleFavorite} />
           ))}
@@ -2655,7 +2655,7 @@ function RewindrAppInner() {
   return (
     <div className="min-h-screen w-full" style={{ background: "#121214" }}>
       <GlobalStyle />
-      <div className="max-w-5xl mx-auto px-3 py-5 sm:px-4 sm:py-8">
+      <div className="max-w-[1600px] mx-auto px-3 py-5 sm:px-6 sm:py-8">
         {lastError && (
           <div className="mb-4 rounded-lg border p-3 text-xs flex items-center justify-between gap-2" style={{ borderColor: "#ff8a8a66", background: "#ff8a8a15", color: "#ff8a8a", ...fontBody }}>
             <span>{lastError}</span>
@@ -2740,7 +2740,7 @@ function RewindrAppInner() {
                     ))}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-4">
                     {filtered.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={name ? toggleFavorite : undefined} />)}
                   </div>
                 )}
@@ -2768,7 +2768,7 @@ function RewindrAppInner() {
                     Du har inte lagt upp något än — gå till "Lägg upp" för att komma igång.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-4">
                     {myItems.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} isFavorite={favorites.includes(item.id)} onToggleFavorite={name ? toggleFavorite : undefined} />)}
                   </div>
                 )
@@ -2786,7 +2786,7 @@ function RewindrAppInner() {
                       Inga favoriter än — klicka på hjärtat på en annons för att spara den här.
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-4">
                       {favItems.map((item) => <Cassette key={item.id} item={item} onOpen={setOpenItem} isFavorite={true} onToggleFavorite={toggleFavorite} />)}
                     </div>
                   );
