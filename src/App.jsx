@@ -151,8 +151,8 @@ function Marquee({ query, setQuery, heroImage }) {
       <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(18,18,20,0.2) 0%, rgba(18,18,20,0.55) 55%, #121214 100%)" }} />
 
       <div className="relative h-full flex flex-col items-center justify-end px-6 pb-10 text-center">
-        <h1 className="text-4xl sm:text-6xl leading-none tracking-tight" style={{ ...fontDisplay, fontWeight: 800, color: "#f3eefc" }}>
-          REWINDR
+        <h1 className="text-2xl sm:text-4xl leading-tight max-w-lg" style={{ ...fontDisplay, fontWeight: 700, color: "#f3eefc" }}>
+          Filmer och spel, från riktiga människor
         </h1>
         <p className="mt-3 text-sm sm:text-base max-w-md" style={{ ...fontBody, color: "#c9b8e0" }}>
           Hyr, köp eller byt filmer och TV-spel med folk i din närhet.
@@ -216,21 +216,27 @@ function Tabs({ active, setActive, showAdmin, showMyListings }) {
         </div>
       </div>
 
-      {/* Desktop/tablet: vanlig pill-rad */}
-      <div className="hidden sm:flex gap-1.5 mb-8 justify-center flex-wrap p-1.5 rounded-lg"
-        style={{ ...fontDisplay, background: "#1c1c20", border: "1px solid #33333a66" }}>
-        {tabs.map((t) => (
-          <button key={t.id} onClick={() => setActive(t.id)}
-            className="px-5 py-2.5 text-base rounded-lg transition-colors flex items-center gap-2"
-            style={{
-              letterSpacing: "0.04em",
-              color: active === t.id ? "#121214" : "#a99bc4",
-              background: active === t.id ? "#ffe94a" : "transparent",
-            }}>
-            {t.id === "admin" && <Crown size={13} />}
-            {t.label}
-          </button>
-        ))}
+      {/* Desktop/tablet: Disney+-stil — logga till vänster, enkla textlänkar, understrykning på aktiv */}
+      <div className="hidden sm:flex items-center gap-8 mb-10 pb-4" style={{ borderBottom: "1px solid #ffffff14" }}>
+        <div className="flex items-center gap-1.5 shrink-0" style={{ ...fontDisplay, fontWeight: 800, fontSize: "18px", color: "#f3eefc" }}>
+          <Rewind size={18} style={{ color: "#ff2fb0" }} />
+          REWINDR
+        </div>
+        <div className="flex items-center gap-6 flex-wrap">
+          {tabs.map((t) => (
+            <button key={t.id} onClick={() => setActive(t.id)}
+              className="text-sm pb-1 transition-colors flex items-center gap-1.5"
+              style={{
+                ...fontBody,
+                fontWeight: active === t.id ? 700 : 500,
+                color: active === t.id ? "#f3eefc" : "#8a7aa8",
+                borderBottom: active === t.id ? "2px solid #ff2fb0" : "2px solid transparent",
+              }}>
+              {t.id === "admin" && <Crown size={13} />}
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
     </>
   );
