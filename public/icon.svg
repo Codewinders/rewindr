@@ -7,27 +7,7 @@
   </defs>
   <rect width="512" height="512" rx="96" fill="#121214"/>
   <rect x="16" y="16" width="480" height="480" rx="84" fill="none" stroke="#33333a" stroke-width="8"/>
-
-  <path fill="url(#rw-grad)" fill-rule="evenodd" d="
-    M 145 110
-    L 145 402
-    L 215 402
-    L 215 275
-    L 250 275
-    L 345 402
-    L 425 402
-    L 320 268
-    C 372 255 400 218 400 165
-    C 400 118 358 105 295 105
-    Z
-    M 210 158
-    L 345 158
-    L 345 243
-    L 210 243
-    Z
-  "/>
-
-  <!-- Spola-tillbaka-symbol, större och tjockare för synlighet i smått format -->
-  <path d="M 302 165 L 245 200 L 302 236 Z" fill="#ffffff"/>
-  <path d="M 345 165 L 288 200 L 345 236 Z" fill="#ffffff"/>
+  <!-- spola-tillbaka-symbol: två trianglar som pekar vänster -->
+  <path d="M266 176 L266 336 L146 256 Z" fill="url(#rw-grad)"/>
+  <path d="M386 176 L386 336 L266 256 Z" fill="url(#rw-grad)"/>
 </svg>

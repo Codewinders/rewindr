@@ -140,28 +140,31 @@ function GlobalStyle() {
 }
 
 // ---------- header ----------
-function Marquee({ query, setQuery }) {
+function Marquee({ query, setQuery, heroImage }) {
   return (
-    <div className="relative overflow-hidden rounded-xl border mb-8" style={{ borderColor: "#33333a", background: "linear-gradient(180deg, #1c1c20 0%, #121214 100%)" }}>
-      <div className="relative px-6 py-12 sm:py-16 text-center">
-        <div className="flex items-center justify-center gap-2 text-[11px] tracking-[0.15em] uppercase mb-4" style={{ ...fontBody, color: "#6d5d8a" }}>
-          <Rewind size={13} /> öppet dygnet runt · lån för lån
-        </div>
-        <h1 className="text-5xl sm:text-6xl leading-none"
-          style={{ ...fontLogo, color: "#ff4fc0", textShadow: "0 1px 0 #00000040" }}>
+    <div className="relative overflow-hidden rounded-xl mb-10" style={{ height: "clamp(320px, 46vw, 460px)" }}>
+      {heroImage ? (
+        <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ filter: "brightness(0.55)" }} />
+      ) : (
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 30% 20%, #2a2a30 0%, #121214 70%)" }} />
+      )}
+      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(18,18,20,0.2) 0%, rgba(18,18,20,0.55) 55%, #121214 100%)" }} />
+
+      <div className="relative h-full flex flex-col items-center justify-end px-6 pb-10 text-center">
+        <h1 className="text-4xl sm:text-6xl leading-none tracking-tight" style={{ ...fontDisplay, fontWeight: 800, color: "#f3eefc" }}>
           REWINDR
         </h1>
-        <p className="mt-5 text-sm sm:text-base max-w-md mx-auto" style={{ ...fontBody, color: "#a99bc4" }}>
-          Hyr, köp eller byt filmer och TV-spel med folk i din närhet — riktiga kopior, riktiga hyllor.
+        <p className="mt-3 text-sm sm:text-base max-w-md" style={{ ...fontBody, color: "#c9b8e0" }}>
+          Hyr, köp eller byt filmer och TV-spel med folk i din närhet.
         </p>
-        <div className="mt-6 max-w-sm mx-auto relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#6d5d8a" }} />
+        <div className="mt-6 max-w-sm w-full relative">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: "#8a7aa8" }} />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Sök titel…"
-            className="w-full pl-9 pr-3 py-2.5 rounded-full outline-none text-sm"
-            style={{ ...fontBody, background: "#121214", border: "1px solid #33333a", color: "#f3eefc" }}
+            className="w-full pl-11 pr-4 py-3 rounded-full outline-none text-sm"
+            style={{ ...fontBody, background: "rgba(28,28,32,0.85)", border: "1px solid rgba(255,255,255,0.12)", color: "#f3eefc", backdropFilter: "blur(8px)" }}
           />
         </div>
       </div>
@@ -671,6 +674,24 @@ function formatIcon(item) {
   if (item.type === "game") return Gamepad2;
   if (item.format === "VHS") return Rewind;
   return Disc; // DVD, Blu-ray, 4K Blu-ray
+}
+
+// En horisontellt rullande rad med titlar, grupperad under en rubrik —
+// samma mönster som Netflix/Apple TV+ använder för att bläddra innehåll.
+function ContentRow({ title, items, onOpen, favorites, onToggleFavorite }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mb-8">
+      <h2 className="text-lg mb-3" style={{ ...fontDisplay, color: "#f3eefc" }}>{title}</h2>
+      <div className="flex gap-3 overflow-x-auto rw-no-scrollbar pb-1 -mx-1 px-1">
+        {items.map((item) => (
+          <div key={item.id} className="w-36 sm:w-44 shrink-0">
+            <Cassette item={item} onOpen={onOpen} isFavorite={favorites.includes(item.id)} onToggleFavorite={onToggleFavorite} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function Cassette({ item, onOpen, isFavorite, onToggleFavorite }) {
@@ -2497,6 +2518,9 @@ function RewindrAppInner() {
   };
   const [infoPage, setInfoPage] = useState(null);
 
+  const withImages = listings.filter((l) => l.imageUrl && !l.sold);
+  const heroImage = withImages.length > 0 ? withImages[withImages.length - 1].imageUrl : null;
+
   const filtered = listings.filter((i) => {
     if (i.sold) return false; // sålda titlar försvinner permanent från Bläddra
     if (i.shelfOnly) return false; // rena hylltitlar visas bara på profilens hylla, inte i Bläddra
@@ -2633,7 +2657,7 @@ function RewindrAppInner() {
           </div>
         )}
         <AuthPanel name={name} accounts={accounts} myCredits={myCredits} onAuthChange={handleAuthChange} />
-        {!viewingProfile && <Marquee query={query} setQuery={setQuery} />}
+        {!viewingProfile && <Marquee query={query} setQuery={setQuery} heroImage={heroImage} />}
         <Tabs active={tab} setActive={(id) => { setEditingItem(null); setViewingProfile(null); setTab(id); }} showAdmin={isAdmin} showMyListings={!!name} />
 
         {!ready ? (
@@ -2683,9 +2707,9 @@ function RewindrAppInner() {
                     <button key={id} onClick={() => setOfferFilter(id)}
                       className="px-3 py-1.5 rounded-full text-xs border"
                       style={{
-                        borderColor: offerFilter === id ? "#21e6ec" : "#33333a",
-                        color: offerFilter === id ? "#21e6ec" : "#8a7aa8",
-                        background: offerFilter === id ? "#21e6ec1a" : "transparent",
+                        borderColor: offerFilter === id ? "#ff2fb0" : "#33333a",
+                        color: offerFilter === id ? "#ff2fb0" : "#8a7aa8",
+                        background: offerFilter === id ? "#ff2fb01a" : "transparent",
                       }}>
                       {label}
                     </button>
@@ -2701,6 +2725,13 @@ function RewindrAppInner() {
                         Bevaka "{query.trim()}" — mejla mig när något dyker upp
                       </button>
                     )}
+                  </div>
+                ) : filter === "all" && offerFilter === "all" && !query.trim() ? (
+                  <div>
+                    <ContentRow title="Nyligen tillagda" items={filtered.slice().reverse().slice(0, 12)} onOpen={setOpenItem} favorites={favorites} onToggleFavorite={name ? toggleFavorite : undefined} />
+                    {GENRES.map((g) => (
+                      <ContentRow key={g} title={g} items={filtered.filter((i) => i.genre === g)} onOpen={setOpenItem} favorites={favorites} onToggleFavorite={name ? toggleFavorite : undefined} />
+                    ))}
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
